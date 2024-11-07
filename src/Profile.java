@@ -2,7 +2,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Profile {
+public class Profile implements ReportedEntity{
     private final String profileId;
     private final Member member;
     private String gender = "not specified";
@@ -136,7 +136,15 @@ public class Profile {
             System.out.println("postId: " + post.getPostId());
             System.out.println(post.getDate());
             System.out.println(post.getContent());
-            System.out.println("--------------------------------------");
+            System.out.println("Likes: "+ post.getLikesCounter());
+            System.out.println(".................................................");
+            post.displayComments();
+            System.out.println("-------------------------------------------------");
         }
+    }
+
+    @Override
+    public ReportedEntity getEntity() {
+        return this;
     }
 }

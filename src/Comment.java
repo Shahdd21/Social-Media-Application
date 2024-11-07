@@ -1,6 +1,6 @@
 import java.time.LocalDate;
 
-public class Comment {
+public class Comment implements ReportedEntity{
     private String content;
     private final LocalDate timestamp;
     private Post post;
@@ -36,5 +36,10 @@ public class Comment {
 
     public LocalDate getTimestamp() {
         return timestamp;
+    }
+
+    @Override
+    public ReportedEntity getEntity() {
+        return this;
     }
 }

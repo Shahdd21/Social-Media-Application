@@ -2,16 +2,25 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Post {
+public class Post implements ReportedEntity{
     private String content;
     private final String postId;
     private final LocalDate date;
     private final List<Comment> commentsList;
+    private int likesCounter = 0;
 
     public Post() {
         this.date = LocalDate.now();
         this.postId = System.currentTimeMillis()%100 + "";
         commentsList = new ArrayList<>();
+    }
+
+    public void setLikesCounter(int likesCounter) {
+        this.likesCounter = likesCounter;
+    }
+
+    public int getLikesCounter() {
+        return likesCounter;
     }
 
     public List<Comment> getCommentsList() {
@@ -45,5 +54,10 @@ public class Post {
             System.out.println(comment.getContent());
             System.out.println(comment.getTimestamp());
         }
+    }
+
+    @Override
+    public ReportedEntity getEntity() {
+        return this;
     }
 }

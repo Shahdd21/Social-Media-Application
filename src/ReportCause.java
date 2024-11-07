@@ -1,0 +1,7 @@
+public enum ReportCause {
+    PORNOGRAPHIC_CONTENT,
+    FAKE_ACCOUNT,
+    HARASSMENT,
+    DISTURBING_CONTENT,
+    SCAM
+}

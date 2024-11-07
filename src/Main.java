@@ -10,7 +10,7 @@ public class Main {
     public static void main(String[] args) {
 
         Member member = new Member("shawerma","Shahd", "Mahmoud",
-                "shahd@gmail.com", "01202468259","123");
+                "shahd@gmail.com", "01202468259","123", true);
         ProfileManager.createProfile(member);
         database.put("shawerma",member);
 
@@ -84,7 +84,9 @@ public class Main {
             Member member = database.get(userName);
 
             if(member.getPassword().equals(password)) {
-                mainMenu(member);
+                if(member.isAdmin()) adminMenu(member);
+
+                else mainMenu(member);
             }
 
             else {
@@ -133,7 +135,7 @@ public class Main {
             System.out.println("\t\u2022 View Friends");
             System.out.println("\t\u2022 Log out");
 
-            System.out.println("Choose between 1-5: ");
+            System.out.println("Choose between 1-6: ");
             int ans = input.nextInt();
             input.nextLine();
 
@@ -163,6 +165,57 @@ public class Main {
         }
     }
 
+    public static void adminMenu(Member member){
+        while(true) {
+            System.out.printf("Hello, %s !\n", member.getFirstName());
+
+            System.out.println("\t\u2022 Profile");
+            System.out.println("\t\u2022 Feed");
+            System.out.println("\t\u2022 Create post");
+            System.out.println("\t\u2022 Add Friends");
+            System.out.println("\t\u2022 View Friends");
+            System.out.println("\t\u2022 Manage Reports");
+            System.out.println("\t\u2022 Log out");
+
+            System.out.println("Choose between 1-7: ");
+            int ans = input.nextInt();
+            input.nextLine();
+
+            switch (ans) {
+                case 1:
+                    openProfile(member);
+                    break;
+
+                case 2:
+                    openFeed(member);
+                    break;
+
+                case 3:
+                    createPost(member);
+                    break;
+
+                case 4:
+                    searchMembers(member);
+                    break;
+
+                case 5:
+                    viewFriends(member);
+                    break;
+
+                case 6:
+                    manageReports(member);
+
+                case 7:  return;
+            }
+        }
+    }
+
+    public static void manageReports(Member member){
+
+        System.out.println("Reports: ");
+        ReportRepository.displayReports();
+    }
+
     public static void openFeed(Member member) {
 
         while (true) {
@@ -174,6 +227,38 @@ public class Main {
 
                 for(Profile friendProfile : friendProfiles){
                     friendProfile.displayPosts();
+                }
+
+                System.out.println("Want to like or comment on a post?\n1: Like 2: Comment 3:Nothing");
+                int ans = input.nextInt();
+                input.nextLine();
+
+                if(ans != 3){
+                    System.out.println("Enter the Post ID: ");
+                    String postId = input.nextLine();
+
+                    Post post = new Post();
+
+                    for(Profile friendProfile : friendProfiles){
+                       for(Post friendPost : friendProfile.getPostsList()){
+                           if(friendPost.getPostId().equals(postId))
+                               post = friendPost;
+                       }
+                    }
+
+                    if(ans == 1) post.setLikesCounter(post.getLikesCounter()+1);
+
+                    if(ans == 2) {
+                        Comment comment = new Comment();
+
+                        System.out.println("Enter your comment: ");
+                        String commentContent = input.nextLine();
+
+                        comment.setContent(commentContent);
+                        comment.setPost(post);
+                        comment.setAuthorProfile(member.getProfile());
+                        post.getCommentsList().add(comment);
+                    }
                 }
             }
 
@@ -206,7 +291,7 @@ public class Main {
 
         Profile profile = member.getProfile();
 
-        System.out.println("\t\t Bio: ");
+        System.out.println("\t\t\t Bio ");
         System.out.println("\t\t"+ profile.getBio());
         System.out.println("---------------------------------------------");
         System.out.println("\u2022 School: "+ profile.getSchool());
@@ -333,10 +418,14 @@ public class Main {
         System.out.println("Type the username of the friend you want to add: ");
         String friendUsername = input.nextLine();
 
-        Profile friendProfile = database.get(friendUsername).getProfile();
+        if(!database.containsKey(friendUsername)) System.out.println("The username doesn't exist");
 
-        friendProfile.addFriend(searcher.getProfile());
-        searcher.getProfile().addFriend(friendProfile);
+        else {
+            Profile friendProfile = database.get(friendUsername).getProfile();
+
+            friendProfile.addFriend(searcher.getProfile());
+            searcher.getProfile().addFriend(friendProfile);
+        }
     }
 
     public static void viewFriends(Member member){

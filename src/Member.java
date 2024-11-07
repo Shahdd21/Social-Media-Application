@@ -6,16 +6,20 @@ public class Member {
     private String email;
     private String phoneNumber;
     private String password;
+    private final boolean isAdmin;
 
-    public Member() {}
+    public Member() {
+        this.isAdmin = false;
+    }
 
-    public Member(String userName, String firstName, String lastName, String email, String phoneNumber, String password) {
+    public Member(String userName, String firstName, String lastName, String email, String phoneNumber, String password, boolean isAdmin) {
         this.userName = userName;
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.phoneNumber = phoneNumber;
         this.password = password;
+        this.isAdmin = isAdmin;
     }
 
     public Profile getProfile() {
@@ -72,5 +76,9 @@ public class Member {
 
     public void setFirstName(String firstName) {
         this.firstName = firstName;
+    }
+
+    public boolean isAdmin() {
+        return isAdmin;
     }
 }
