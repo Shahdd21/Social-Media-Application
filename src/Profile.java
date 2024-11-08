@@ -147,4 +147,14 @@ public class Profile implements ReportedEntity{
     public ReportedEntity getEntity() {
         return this;
     }
+
+    @Override
+    public String getID() {
+        return profileId;
+    }
+
+    @Override
+    public String getType() {
+        return "Profile";
+    }
 }

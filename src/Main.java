@@ -210,10 +210,12 @@ public class Main {
         }
     }
 
-    public static void manageReports(Member member){
+    public static void manageReports(Member admin){
 
-        System.out.println("Reports: ");
-        ReportRepository.displayReports();
+        while(true) {
+            System.out.println("Reports: ");
+            ReportRepository.displayReports(admin);
+        }
     }
 
     public static void openFeed(Member member) {
@@ -229,11 +231,11 @@ public class Main {
                     friendProfile.displayPosts();
                 }
 
-                System.out.println("Want to like or comment on a post?\n1: Like 2: Comment 3:Nothing");
+                System.out.println("Interact with the post:\n1: Like 2: Comment 3:Report 4:Nothing");
                 int ans = input.nextInt();
                 input.nextLine();
 
-                if(ans != 3){
+                if(ans != 4){
                     System.out.println("Enter the Post ID: ");
                     String postId = input.nextLine();
 
@@ -258,6 +260,49 @@ public class Main {
                         comment.setPost(post);
                         comment.setAuthorProfile(member.getProfile());
                         post.getCommentsList().add(comment);
+                    }
+
+                    if(ans == 3){
+                        Report report = new Report();
+
+                        System.out.println("choose the reason of your report: ");
+                        System.out.println("1- Pornographic content");
+                        System.out.println("2- Fake Account");
+                        System.out.println("3- Harassment");
+                        System.out.println("4- Disturbing content");
+                        System.out.println("5- Scam");
+
+                        int reason = input.nextInt();
+                        input.nextLine();
+
+                        switch (reason){
+                            case 1:
+                                report.setReportCause(ReportCause.PORNOGRAPHIC_CONTENT);
+                                break;
+
+                            case 2:
+                                report.setReportCause(ReportCause.FAKE_ACCOUNT);
+                                break;
+
+                            case 3:
+                                report.setReportCause(ReportCause.HARASSMENT);
+                                break;
+
+                            case 4:
+                                report.setReportCause(ReportCause.DISTURBING_CONTENT);
+                                break;
+
+                            case 5:
+                                report.setReportCause(ReportCause.SCAM);
+                                break;
+                        }
+
+                        report.setReportedEntity(post);
+                        report.setReportingProfile(member.getProfile());
+
+                        ReportRepository.addReport(report);
+
+                        System.out.println("Report is made successfully !");
                     }
                 }
             }

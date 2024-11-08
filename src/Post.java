@@ -11,7 +11,7 @@ public class Post implements ReportedEntity{
 
     public Post() {
         this.date = LocalDate.now();
-        this.postId = System.currentTimeMillis()%100 + "";
+        this.postId = System.currentTimeMillis()%1000 + "";
         commentsList = new ArrayList<>();
     }
 
@@ -59,5 +59,15 @@ public class Post implements ReportedEntity{
     @Override
     public ReportedEntity getEntity() {
         return this;
+    }
+
+    @Override
+    public String getID() {
+        return postId;
+    }
+
+    @Override
+    public String getType() {
+        return "Post";
     }
 }

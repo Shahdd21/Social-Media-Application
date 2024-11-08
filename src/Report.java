@@ -1,15 +1,12 @@
 import java.time.LocalDate;
 
 public class Report {
-    private final ReportCause reportCause;
-    private final ReportedEntity reportedEntity;
-    private final Profile reportingProfile;
+    private  ReportCause reportCause;
+    private  ReportedEntity reportedEntity;
+    private  Profile reportingProfile;
     private final LocalDate timestamp;
 
-    public Report(ReportCause reportCause, Profile reportingProfile, ReportedEntity reportedEntity) {
-        this.reportCause = reportCause;
-        this.reportingProfile = reportingProfile;
-        this.reportedEntity = reportedEntity;
+    public Report() {
         this.timestamp = LocalDate.now();
     }
 
@@ -27,5 +24,17 @@ public class Report {
 
     public ReportedEntity getReportedEntity() {
         return reportedEntity;
+    }
+
+    public void setReportingProfile(Profile reportingProfile) {
+        this.reportingProfile = reportingProfile;
+    }
+
+    public void setReportedEntity(ReportedEntity reportedEntity) {
+        this.reportedEntity = reportedEntity;
+    }
+
+    public void setReportCause(ReportCause reportCause) {
+        this.reportCause = reportCause;
     }
 }

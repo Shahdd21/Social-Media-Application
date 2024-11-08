@@ -1,6 +1,7 @@
 import java.time.LocalDate;
 
 public class Comment implements ReportedEntity{
+    private final String commentID ;
     private String content;
     private final LocalDate timestamp;
     private Post post;
@@ -8,6 +9,7 @@ public class Comment implements ReportedEntity{
 
     public Comment(){
         timestamp = LocalDate.now();
+        commentID = System.currentTimeMillis()%100 +"";
     }
 
     public String getContent() {
@@ -41,5 +43,15 @@ public class Comment implements ReportedEntity{
     @Override
     public ReportedEntity getEntity() {
         return this;
+    }
+
+    @Override
+    public String getID() {
+        return commentID;
+    }
+
+    @Override
+    public String getType() {
+        return "Comment";
     }
 }
