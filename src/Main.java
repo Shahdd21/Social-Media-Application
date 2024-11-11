@@ -6,11 +6,12 @@ import java.util.Scanner;
 public class Main {
     public static Scanner input = new Scanner(System.in);
     public static Map<String, Member> database = new HashMap<>();
+    public static ChatMediator chatMediator = new ChatManagement();
 
     public static void main(String[] args) {
 
         Member member = new Member("shawerma","Shahd", "Mahmoud",
-                "shahd@gmail.com", "01202468259","123", true);
+                "shahd@gmail.com", "0123456789","123", true);
         ProfileManager.createProfile(member);
         database.put("shawerma",member);
 
@@ -128,14 +129,16 @@ public class Main {
         while(true) {
             System.out.printf("Hello, %s !\n", member.getFirstName());
 
-            System.out.println("\t\u2022 Profile");
-            System.out.println("\t\u2022 Feed");
-            System.out.println("\t\u2022 Create post");
-            System.out.println("\t\u2022 Add Friends");
-            System.out.println("\t\u2022 View Friends");
-            System.out.println("\t\u2022 Log out");
+            System.out.println("\t1) Profile");
+            System.out.println("\t2) Feed");
+            System.out.println("\t3) Inbox");
+            System.out.println("\t4) Create post");
+            System.out.println("\t5) Add Friends");
+            System.out.println("\t6) View Friends");
+            System.out.println("\t7) View Friend Requests");
+            System.out.println("\t8) Log out");
 
-            System.out.println("Choose between 1-6: ");
+            System.out.println("Choose between 1-8: ");
             int ans = input.nextInt();
             input.nextLine();
 
@@ -149,19 +152,67 @@ public class Main {
                     break;
 
                 case 3:
-                    createPost(member);
+                    openInbox(member);
                     break;
 
                 case 4:
-                    searchMembers(member);
+                    createPost(member);
                     break;
 
                 case 5:
+                    addFriends(member);
+                    break;
+
+                case 6:
                     viewFriends(member);
                     break;
 
-                case 6:  return;
+                case 7:
+                    viewFriendRequests(member);
+                    break;
+
+                case 8:  return;
             }
+        }
+    }
+
+    public static void openInbox(Member member){
+        System.out.println("Enter the username you want to send message to:");
+        String toMember = input.nextLine();
+
+        Profile toProfile = database.get(toMember).getProfile();
+
+        if(member.getProfile().getFriendsList().contains(toProfile)){
+            System.out.println("Enter the message:");
+            String messageContent = input.nextLine();
+
+            Message message = new Message(messageContent, toProfile, member.getProfile());
+            chatMediator.sendDirectMessage(message,member.getProfile(),toProfile);
+        }
+    }
+
+    public static void viewFriendRequests(Member member){
+
+        Profile memberProfile = member.getProfile();
+        List<Profile> pendingList = memberProfile.getPendingFriendsList();
+
+        for (int i = 0; i < pendingList.size(); ++i) {
+            Member friendMember = pendingList.get(i).getMember();
+
+            System.out.printf("%s %s (%s)\n", friendMember.getFirstName(), friendMember.getLastName(),
+                    friendMember.getUserName());
+
+            System.out.println("1: Accept 2:Delete 3:Nothing");
+            int ans = input.nextInt();
+            input.nextLine();
+
+            if (ans == 1) {
+                member.getProfile().getFriendsList().add(friendMember.getProfile());
+                member.getProfile().getPendingFriendsList().remove(friendMember.getProfile());
+            } else if (ans == 2) {
+                member.getProfile().getPendingFriendsList().remove(friendMember.getProfile());
+            } else if (ans == 3) continue;
+            else System.out.println("Incorrect input.");
         }
     }
 
@@ -174,10 +225,11 @@ public class Main {
             System.out.println("\t\u2022 Create post");
             System.out.println("\t\u2022 Add Friends");
             System.out.println("\t\u2022 View Friends");
+            System.out.println("\t\u2022 View Friend Requests");
             System.out.println("\t\u2022 Manage Reports");
             System.out.println("\t\u2022 Log out");
 
-            System.out.println("Choose between 1-7: ");
+            System.out.println("Choose between 1-8: ");
             int ans = input.nextInt();
             input.nextLine();
 
@@ -195,7 +247,7 @@ public class Main {
                     break;
 
                 case 4:
-                    searchMembers(member);
+                    addFriends(member);
                     break;
 
                 case 5:
@@ -205,7 +257,10 @@ public class Main {
                 case 6:
                     manageReports(member);
 
-                case 7:  return;
+                case 7:
+                    viewFriendRequests(member);
+
+                case 8:  return;
             }
         }
     }
@@ -215,6 +270,10 @@ public class Main {
         while(true) {
             System.out.println("Reports: ");
             ReportRepository.displayReports(admin);
+
+            System.out.println("Enter the report ID you want to process: ");
+            String reportId = input.nextLine();
+
         }
     }
 
@@ -450,7 +509,7 @@ public class Main {
         return true;
     }
 
-    public static void searchMembers(Member searcher){
+    public static void addFriends(Member searcher){
         for(Map.Entry<String,Member> entry: database.entrySet()){
             String username = entry.getKey();
             Member member = entry.getValue();
@@ -469,7 +528,6 @@ public class Main {
             Profile friendProfile = database.get(friendUsername).getProfile();
 
             friendProfile.addFriend(searcher.getProfile());
-            searcher.getProfile().addFriend(friendProfile);
         }
     }
 

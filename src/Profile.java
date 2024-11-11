@@ -17,6 +17,7 @@ public class Profile implements ReportedEntity{
     private String bio = "not specified";
     private List<Post> postsList;
     private final List<Profile> friendsList;
+    private final List<Profile> pendingFriendsList;
 
     public Profile(Member member){
         profileId = System.currentTimeMillis()%1000 +"";
@@ -24,10 +25,11 @@ public class Profile implements ReportedEntity{
         joinDate = LocalDate.now();
         friendsList = new ArrayList<>();
         this.member = member;
+        pendingFriendsList = new ArrayList<>();
     }
 
     public void addFriend(Profile friendProfile){
-        friendsList.add(friendProfile);
+        pendingFriendsList.add(friendProfile);
     }
 
     public void deleteFriend(Profile friendProfile){
@@ -141,6 +143,10 @@ public class Profile implements ReportedEntity{
             post.displayComments();
             System.out.println("-------------------------------------------------");
         }
+    }
+
+    public List<Profile> getPendingFriendsList() {
+        return pendingFriendsList;
     }
 
     @Override
