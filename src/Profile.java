@@ -140,7 +140,7 @@ public class Profile implements ReportedEntity{
             System.out.println("postId: " + post.getPostId());
             System.out.println(post.getDate());
             System.out.println(post.getContent());
-            System.out.println("Likes: "+ post.getLikesCounter());
+            System.out.println("Likes: "+ post.getLikesNum());
             System.out.println(".................................................");
             post.displayComments();
             System.out.println("-------------------------------------------------");
