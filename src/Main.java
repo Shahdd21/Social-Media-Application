@@ -11,7 +11,7 @@ public class Main {
     public static void main(String[] args) {
 
         Member member = new Member("shawerma","Shahd", "Mahmoud",
-                "shahd@gmail.com", "0123456789","123", true);
+                "shahd@gmail.com", "0123456789","123", false);
         ProfileManager.createProfile(member);
         database.put("shawerma",member);
 
@@ -177,17 +177,88 @@ public class Main {
     }
 
     public static void openInbox(Member member){
-        System.out.println("Enter the username you want to send message to:");
-        String toMember = input.nextLine();
+        System.out.println("Chats: ");
+        String memberUsername = member.getUserName();
 
-        Profile toProfile = database.get(toMember).getProfile();
+        Map<String, List<Message>> map = ChatRepository.getConversations();
 
-        if(member.getProfile().getFriendsList().contains(toProfile)){
-            System.out.println("Enter the message:");
-            String messageContent = input.nextLine();
+        map.forEach((k,v) -> {
+            if(k.contains(memberUsername)){
+                String[] usernames = k.split("_");
+                String friendUsername = (usernames[0].equals(memberUsername) ? usernames[1] : usernames[0] );
+                System.out.println("\u2022"+friendUsername);
+                System.out.println(v.get(v.size()-1).getContent());
+                System.out.println("******************************************");
+            }
+        });
 
-            Message message = new Message(messageContent, toProfile, member.getProfile());
-            chatMediator.sendDirectMessage(message,member.getProfile(),toProfile);
+        System.out.println("1: Open Chat 2: Add new Chat");
+        int ans = input.nextInt();
+        input.nextLine();
+
+        if(ans == 1){
+            System.out.println("Enter the username of the chat you want to open: ");
+            String friendUsername = input.nextLine();
+            String combination = (friendUsername.compareTo(memberUsername) < 0 ? friendUsername+"_"+memberUsername :
+                    memberUsername+"_"+friendUsername);
+            Map<String, List<Message>> conversations = ChatRepository.getConversations();
+
+            conversations.forEach((k,v) -> {
+                if(k.equals(combination)){
+                    for (Message message : v) {
+                        if(!message.getSender().getUsername().equals(memberUsername)){
+                        System.out.println(message.getSender().getMember().getUserName());
+                        System.out.println(message.getContent());
+                        }
+                        else System.out.println("\t\t\t"+message.getContent());
+
+                        System.out.println(message.getTimestamp());
+                    }
+                }
+            });
+
+            while(true) {
+                System.out.println("1: Send a message 2: Return");
+                int choice = input.nextInt();
+                input.nextLine();
+
+                if (choice == 1) {
+                    System.out.println("Write your message: ");
+                    String content = input.nextLine();
+                    Message message = new Message(content, ProfileManager.getProfileByUsername(friendUsername),
+                            ProfileManager.getProfileByUsername(memberUsername));
+
+                    chatMediator.sendDirectMessage(message, ProfileManager.getProfileByUsername(memberUsername),
+                            ProfileManager.getProfileByUsername(friendUsername));
+                } else {
+                    break;
+                }
+            }
+        }
+        else if (ans == 2) {
+            for(Profile friend : member.getProfile().getFriendsList()){
+                System.out.printf("%s %s (%s)\n", friend.getMember().getFirstName(), friend.getMember().getLastName(),
+                        friend.getMember().getUserName());
+            }
+
+            System.out.println("Write the username you want to send a message to: ");
+            String friendUsername = input.nextLine();
+
+            if(ProfileManager.find(friendUsername)){
+                if(member.getProfile().getFriendsList().contains(ProfileManager.getProfileByUsername(friendUsername))){
+                    System.out.println("Write your first message: ");
+                    String content = input.nextLine();
+
+                    Message message = new Message(content, ProfileManager.getProfileByUsername(friendUsername),
+                            member.getProfile());
+
+                    chatMediator.sendDirectMessage(message, ProfileManager.getProfileByUsername(memberUsername),
+                            ProfileManager.getProfileByUsername(friendUsername));
+                }
+
+                else System.out.println("The user is not in your friends list");
+            }
+            else System.out.println("The user does not exist");
         }
     }
 
@@ -209,6 +280,7 @@ public class Main {
             if (ans == 1) {
                 member.getProfile().getFriendsList().add(friendMember.getProfile());
                 member.getProfile().getPendingFriendsList().remove(friendMember.getProfile());
+                friendMember.getProfile().getFriendsList().add(memberProfile);
             } else if (ans == 2) {
                 member.getProfile().getPendingFriendsList().remove(friendMember.getProfile());
             } else if (ans == 3) continue;

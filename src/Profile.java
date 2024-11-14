@@ -5,6 +5,7 @@ import java.util.List;
 public class Profile implements ReportedEntity{
     private final String profileId;
     private final Member member;
+    private final String username;
     private String gender = "not specified";
     private String sexPreference = "not specified";
     private String religion = "not specified";
@@ -26,6 +27,7 @@ public class Profile implements ReportedEntity{
         friendsList = new ArrayList<>();
         this.member = member;
         pendingFriendsList = new ArrayList<>();
+        this.username = member.getUserName();
     }
 
     public void addFriend(Profile friendProfile){
@@ -143,6 +145,10 @@ public class Profile implements ReportedEntity{
             post.displayComments();
             System.out.println("-------------------------------------------------");
         }
+    }
+
+    public String getUsername() {
+        return username;
     }
 
     public List<Profile> getPendingFriendsList() {

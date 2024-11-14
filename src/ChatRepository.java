@@ -6,7 +6,7 @@ import java.util.Map;
 public class ChatRepository {
     private static final Map<String, List<Message>> conversations = new HashMap<>();
 
-    public static Map<String, List<Message>> getConverstions(){
+    public static Map<String, List<Message>> getConversations(){
         return conversations;
     }
 
