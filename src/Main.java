@@ -1,11 +1,10 @@
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
 public class Main {
     public static Scanner input = new Scanner(System.in);
-    public static Map<String, Member> database = new HashMap<>();
+    public static Database database = Database.getInstance();
     public static ChatMediator chatMediator = new ChatManagement();
 
     public static void main(String[] args) {
@@ -13,7 +12,7 @@ public class Main {
         Member member = new Member("shawerma","Shahd", "Mahmoud",
                 "shahd@gmail.com", "0123456789","123", false);
         ProfileManager.createProfile(member);
-        database.put("shawerma",member);
+        database.getMembersRepo().put("shawerma",member);
 
         while(true) {
             startingMenu();
@@ -67,7 +66,7 @@ public class Main {
         member.setPassword(password);
 
         ProfileManager.createProfile(member);
-        database.put(member.getUserName(), member);
+        database.getMembersRepo().put(member.getUserName(), member);
         System.out.println("You joined the Family !");
 
         mainMenu(member);
@@ -81,8 +80,8 @@ public class Main {
         System.out.println("Password: ");
         String password = input.nextLine();
 
-        if (database.containsKey(userName)){
-            Member member = database.get(userName);
+        if (database.getMembersRepo().containsKey(userName)){
+            Member member = database.getMembersRepo().get(userName);
 
             if(member.getPassword().equals(password)) {
                 if(member.isAdmin()) adminMenu(member);
@@ -106,7 +105,7 @@ public class Main {
         }
     }
 
-    public static boolean recoverPassword(Member member){
+    public static void recoverPassword(Member member){
         System.out.println("Enter your new password: ");
         String password = input.nextLine();
 
@@ -121,7 +120,6 @@ public class Main {
 
         member.setPassword(confirmedPassword);
 
-        return true;
     }
 
     public static void mainMenu(Member member){
@@ -136,7 +134,8 @@ public class Main {
             System.out.println("\t5) Add Friends");
             System.out.println("\t6) View Friends");
             System.out.println("\t7) View Friend Requests");
-            System.out.println("\t8) Log out");
+            System.out.println("\t8) Notification");
+            System.out.println("\t9) Log out");
 
             System.out.println("Choose between 1-8: ");
             int ans = input.nextInt();
@@ -171,12 +170,19 @@ public class Main {
                     viewFriendRequests(member);
                     break;
 
-                case 8:  return;
+                case 8:
+                    openNotification(member);
+                    break;
+
+                case 9:  return;
             }
         }
     }
 
     public static void openInbox(Member member){
+
+        NotificationService notificationService = new NotificationService();
+
         System.out.println("Chats: ");
         String memberUsername = member.getUserName();
 
@@ -230,6 +236,11 @@ public class Main {
 
                     chatMediator.sendDirectMessage(message, ProfileManager.getProfileByUsername(memberUsername),
                             ProfileManager.getProfileByUsername(friendUsername));
+
+                    notificationService.sendNotification(member.getProfile().getProfileId(),
+                            ProfileManager.getProfileByUsername(friendUsername).getProfileId(),
+                            EventType.NEW_MESSAGE, member.getFirstName()+" "+
+                                    member.getLastName()+" sent you a message");
                 } else {
                     break;
                 }
@@ -254,6 +265,11 @@ public class Main {
 
                     chatMediator.sendDirectMessage(message, ProfileManager.getProfileByUsername(memberUsername),
                             ProfileManager.getProfileByUsername(friendUsername));
+
+                    notificationService.sendNotification(member.getProfile().getProfileId(),
+                            ProfileManager.getProfileByUsername(friendUsername).getProfileId(),
+                            EventType.NEW_MESSAGE, member.getFirstName()+" "+
+                                    member.getLastName()+" sent you a message");
                 }
 
                 else System.out.println("The user is not in your friends list");
@@ -281,6 +297,13 @@ public class Main {
                 member.getProfile().getFriendsList().add(friendMember.getProfile());
                 member.getProfile().getPendingFriendsList().remove(friendMember.getProfile());
                 friendMember.getProfile().getFriendsList().add(memberProfile);
+
+                NotificationService notificationService = new NotificationService();
+
+                notificationService.sendNotification(memberProfile.getID(), friendMember.getProfile().getProfileId(),
+                        EventType.FRIEND_REQUEST, member.getFirstName()+" "+ member.getLastName()
+                +" accepted your friend request. You're friends now !");
+
             } else if (ans == 2) {
                 member.getProfile().getPendingFriendsList().remove(friendMember.getProfile());
             } else if (ans == 3) continue;
@@ -351,6 +374,8 @@ public class Main {
 
     public static void openFeed(Member member) {
 
+        NotificationService notificationService = new NotificationService();
+
         while (true) {
             System.out.println("Here is Feed !");
             System.out.println();
@@ -371,15 +396,24 @@ public class Main {
                     String postId = input.nextLine();
 
                     Post post = new Post();
+                    Profile friendprofile = null ;
 
                     for(Profile friendProfile : friendProfiles){
                        for(Post friendPost : friendProfile.getPostsList()){
-                           if(friendPost.getPostId().equals(postId))
+                           if(friendPost.getPostId().equals(postId)) {
                                post = friendPost;
+                               friendprofile = friendProfile;
+                           }
                        }
                     }
 
-                    if(ans == 1) post.setLikesCounter(post.getLikesCounter()+1);
+                    if(ans == 1) {
+                        post.addLike(member.getProfile());
+                        notificationService.sendNotification(member.getProfile().getProfileId(),
+                                friendprofile.getProfileId(), EventType.POST_INTERACTION,
+                                member.getFirstName()+" "+member.getLastName()+
+                                " liked your post "+ post.getPostId());
+                    }
 
                     if(ans == 2) {
                         Comment comment = new Comment();
@@ -391,6 +425,11 @@ public class Main {
                         comment.setPost(post);
                         comment.setAuthorProfile(member.getProfile());
                         post.getCommentsList().add(comment);
+
+                        notificationService.sendNotification(member.getProfile().getProfileId(),
+                                friendprofile.getProfileId(), EventType.POST_INTERACTION,
+                                member.getFirstName()+" "+member.getLastName() +" commented on your post "+
+                                post.getPostId());
                     }
 
                     if(ans == 3){
@@ -582,7 +621,9 @@ public class Main {
     }
 
     public static void addFriends(Member searcher){
-        for(Map.Entry<String,Member> entry: database.entrySet()){
+        Map<String, Member> memberMap = database.getMembersRepo();
+
+        for(Map.Entry<String,Member> entry: memberMap.entrySet()){
             String username = entry.getKey();
             Member member = entry.getValue();
 
@@ -594,12 +635,16 @@ public class Main {
         System.out.println("Type the username of the friend you want to add: ");
         String friendUsername = input.nextLine();
 
-        if(!database.containsKey(friendUsername)) System.out.println("The username doesn't exist");
+        if(!memberMap.containsKey(friendUsername)) System.out.println("The username doesn't exist");
 
         else {
-            Profile friendProfile = database.get(friendUsername).getProfile();
-
+            Profile friendProfile = memberMap.get(friendUsername).getProfile();
             friendProfile.addFriend(searcher.getProfile());
+
+            NotificationService notificationService = new NotificationService();
+            notificationService.sendNotification(searcher.getProfile().getProfileId(),
+                    friendProfile.getProfileId(), EventType.FRIEND_REQUEST,
+                    searcher.getFirstName()+" "+searcher.getLastName()+" sent you a friend request");
         }
     }
 
@@ -609,6 +654,19 @@ public class Main {
         for(Profile friend : profile.getFriendsList()){
             System.out.printf("%s %s (%s)\n", friend.getMember().getFirstName(),
                     friend.getMember().getLastName(), friend.getMember().getUserName());
+        }
+    }
+
+    public static void openNotification(Member member) {
+
+        if (database.getNotificationsRepo().containsKey(member.getProfile().getProfileId())) {
+
+            List<Notification> notificationList = database.getNotificationsRepo().get(member.getProfile().getProfileId());
+            for (Notification notification : notificationList) {
+                System.out.println(notification.getNotificationMessage());
+                System.out.println(notification.getTimestamp());
+                System.out.println("________________________________________________");
+            }
         }
     }
 }
