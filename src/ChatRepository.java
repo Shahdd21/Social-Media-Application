@@ -4,17 +4,17 @@ import java.util.List;
 import java.util.Map;
 
 public class ChatRepository {
-    private static final Map<String, List<Message>> conversations = new HashMap<>();
+    private final Map<String, List<Message>> conversations = new HashMap<>();
 
-    public static Map<String, List<Message>> getConversations(){
+    public Map<String, List<Message>> getConversations(){
         return conversations;
     }
 
-    public static boolean find(String key){
+    public boolean find(String key){
         return conversations.containsKey(key);
     }
 
-    public static void addConversation(String key, Message message){
+    public void addConversation(String key, Message message){
 
         if(find(key)){
             conversations.get(key).add(message);

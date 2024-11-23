@@ -4,8 +4,9 @@ import java.util.List;
 
 public class Profile implements ReportedEntity{
     private final String profileId;
-    private final Member member;
     private final String username;
+    private String firstName;
+    private String lastName;
     private String gender = "not specified";
     private String sexPreference = "not specified";
     private String religion = "not specified";
@@ -16,30 +17,13 @@ public class Profile implements ReportedEntity{
     private String work = "not specified";
     private final LocalDate joinDate;
     private String bio = "not specified";
-    private List<Post> postsList;
-    private final List<Profile> friendsList;
-    private final List<Profile> pendingFriendsList;
 
     public Profile(Member member){
         profileId = System.currentTimeMillis()%1000 +"";
-        postsList = new ArrayList<>();
         joinDate = LocalDate.now();
-        friendsList = new ArrayList<>();
-        this.member = member;
-        pendingFriendsList = new ArrayList<>();
         this.username = member.getUserName();
-    }
-
-    public void addFriend(Profile friendProfile){
-        pendingFriendsList.add(friendProfile);
-    }
-
-    public void deleteFriend(Profile friendProfile){
-        friendsList.remove(friendProfile);
-    }
-
-    public List<Profile> getFriendsList(){
-        return friendsList;
+        firstName = member.getFirstName();
+        lastName = member.getLastName();
     }
 
     public String getGender() {
@@ -48,14 +32,6 @@ public class Profile implements ReportedEntity{
 
     public void setGender(String gender) {
         this.gender = gender;
-    }
-
-    public List<Post> getPostsList() {
-        return postsList;
-    }
-
-    public void setPostsList(List<Post> postsList) {
-        this.postsList = postsList;
     }
 
     public String getBio() {
@@ -130,29 +106,16 @@ public class Profile implements ReportedEntity{
         return profileId;
     }
 
-    public Member getMember() {
-        return member;
-    }
-
-    public void displayPosts(){
-        for(Post post : postsList){
-            System.out.println(member.getFirstName()+" "+ member.getLastName());
-            System.out.println("postId: " + post.getPostId());
-            System.out.println(post.getDate());
-            System.out.println(post.getContent());
-            System.out.println("Likes: "+ post.getLikesNum());
-            System.out.println(".................................................");
-            post.displayComments();
-            System.out.println("-------------------------------------------------");
-        }
-    }
-
     public String getUsername() {
         return username;
     }
 
-    public List<Profile> getPendingFriendsList() {
-        return pendingFriendsList;
+    public String getLastName() {
+        return lastName;
+    }
+
+    public String getFirstName() {
+        return firstName;
     }
 
     @Override

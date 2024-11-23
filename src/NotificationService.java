@@ -1,3 +1,4 @@
+import javax.xml.crypto.Data;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,10 +9,6 @@ public class NotificationService {
 
         Database database = Database.getInstance();
 
-        List<Notification> notificationList =
-                database.getNotificationsRepo().getOrDefault(receiverId, new ArrayList<>());
-        notificationList.add(notification);
-
-        database.getNotificationsRepo().put(receiverId,notificationList);
+        database.getNotificationRepository().addNotification(receiverId, notification);
     }
 }
