@@ -21,7 +21,7 @@ public class ReportRepository {
                 System.out.println(report.getCause());
                 System.out.print(report.getReportedEntity().getType()+": ");
                 System.out.println(report.getReportedEntity().getID());
-                System.out.println(report.getReportingProfile().getMember().getUserName());
+                //System.out.println(report.getReportingProfile().getMember().getUserName());
             }
         }
         else System.out.println("Non-authorized access");

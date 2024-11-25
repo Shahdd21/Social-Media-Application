@@ -9,6 +9,6 @@ public class NotificationService {
 
         Database database = Database.getInstance();
 
-        database.getNotificationRepository().addNotification(receiverId, notification);
+        database.addNotification(receiverId, notification);
     }
 }

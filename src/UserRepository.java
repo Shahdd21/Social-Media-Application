@@ -13,6 +13,10 @@ public class UserRepository {
         this.pendingFriendsList = new HashMap<>();
     }
 
+    public void addMember(String username, Member member){
+        membersRepo.put(username, member);
+    }
+
     public void addFriend(Profile senderProfile, Profile friendProfile){
         pendingFriendsList.get(senderProfile).add(friendProfile);
     }
@@ -45,7 +49,7 @@ public class UserRepository {
         return pendingFriendsList;
     }
 
-    public boolean findUsername(String username){
+    public boolean isFoundMember(String username){
         return membersRepo.containsKey(username);
     }
 }

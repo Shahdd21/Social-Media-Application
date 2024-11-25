@@ -18,16 +18,20 @@ public class PostsRepository {
     }
 
     public void displayPosts(Profile profile){
-        for(Post post : postsByUser.get(profile)){
-            System.out.println(profile.getFirstName()+" "+ profile.getLastName());
-            System.out.println("postId: " + post.getPostId());
-            System.out.println(post.getDate());
-            System.out.println(post.getContent());
-            System.out.println("Likes: "+ new PostsRepository().getLikesNum(post));
-            System.out.println(".................................................");
-            new PostsRepository().displayComments(post);
-            System.out.println("-------------------------------------------------");
+
+        if(!postsByUser.get(profile).isEmpty()) {
+            for (Post post : postsByUser.get(profile)) {
+                System.out.println(profile.getFirstName() + " " + profile.getLastName());
+                System.out.println("postId: " + post.getPostId());
+                System.out.println(post.getDate());
+                System.out.println(post.getContent());
+                System.out.println("Likes: " + getLikesNum(post));
+                System.out.println(".................................................");
+                displayComments(post);
+                System.out.println("-------------------------------------------------");
+            }
         }
+        else System.out.println("No posts to show.");
     }
 
     public List<Post> getPostsList(Profile profile){
