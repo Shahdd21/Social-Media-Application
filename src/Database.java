@@ -64,6 +64,14 @@ public class Database {
         userRepository.deleteFriend(senderProfile, friendProfile);
     }
 
+    public void follow(Profile senderProfile, Profile friendProfile){
+        userRepository.follow(senderProfile, friendProfile);
+    }
+
+    public void unfollow(Profile senderProfile, Profile friendProfile){
+        userRepository.unfollow(senderProfile, friendProfile);
+    }
+
     public List<Profile> getFriendsList(Profile profile){
         return userRepository.getFriendsList(profile);
     }
@@ -80,12 +88,12 @@ public class Database {
         return userRepository.getMembersRepo();
     }
 
-    public Map<Profile, List<Profile>> getFriendsList(){
-        return userRepository.getFriendsList();
+    public Map<Profile, List<Profile>> getFriendsMap(){
+        return userRepository.getFriendsMap();
     }
 
-    public Map<Profile, List<Profile>> getPendingFriendsList(){
-        return userRepository.getPendingFriendsList();
+    public Map<Profile, List<Profile>> getPendingFriendsMap(){
+        return userRepository.getPendingFriendsMap();
     }
 
     public boolean isFoundMember(String username){
@@ -96,8 +104,12 @@ public class Database {
         postsRepository.displayPosts(profile);
     }
 
-    public List<Post> getPostsList(Profile profile){
+    public List<Post> getPostsMap(Profile profile){
         return postsRepository.getPostsList(profile);
+    }
+
+    public Map<Profile, List<Post>> getPostsMap(){
+        return postsRepository.getPostsByUser();
     }
 
     public void displayComments(Post post){
@@ -126,5 +138,25 @@ public class Database {
 
     public Post getPost(String id){
         return postsRepository.getPost(id);
+    }
+
+    public void addPost(Profile profile, Post post){
+        postsRepository.addPost(profile, post);
+    }
+
+    public Map<Profile, List<Profile>> getFollowingMap(){
+        return userRepository.getFollowingMap();
+    }
+
+    public Map<Profile, List<Profile>> getFollowersMap(){
+        return userRepository.getFollowersMap();
+    }
+
+    public List<Profile> getFollowersList(Profile profile){
+        return userRepository.getFollowersList(profile);
+    }
+
+    public List<Profile> getFollowingList(Profile profile){
+        return userRepository.getFollowingList(profile);
     }
 }

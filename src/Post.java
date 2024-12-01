@@ -6,6 +6,7 @@ import java.util.Set;
 
 public class Post implements ReportedEntity{
     private String content;
+    private final String authorName;
     private final String postId;
     private final String profileId;
     private final LocalDate date;
@@ -14,6 +15,9 @@ public class Post implements ReportedEntity{
         this.date = LocalDate.now();
         this.postId = System.currentTimeMillis()%1000 + "";
         this.profileId = profileId;
+
+        Profile profile = ProfileManager.getProfileById(profileId);
+        this.authorName = profile.getFirstName()+" "+ profile.getLastName();
     }
 
     public Post getPost() {
@@ -34,6 +38,10 @@ public class Post implements ReportedEntity{
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getAuthorName() {
+        return authorName;
     }
 
     public String getProfileId() {

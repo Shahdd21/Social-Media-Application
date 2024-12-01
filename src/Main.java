@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -131,7 +132,7 @@ public class Main {
             System.out.println("\t2) Feed");
             System.out.println("\t3) Inbox");
             System.out.println("\t4) Create post");
-            System.out.println("\t5) Add Friends");
+            System.out.println("\t5) Explore");
             System.out.println("\t6) View Friends");
             System.out.println("\t7) View Friend Requests");
             System.out.println("\t8) Notification");
@@ -159,7 +160,7 @@ public class Main {
                     break;
 
                 case 5:
-                    addFriends(member);
+                    explore(member);
                     break;
 
                 case 6:
@@ -246,7 +247,7 @@ public class Main {
                 }
             }
         }
-        else if (ans == 2) { //member.getProfile().getFriendsList()
+        else if (ans == 2) {
             for(Profile friend : database.getFriendsList(member.getProfile())){
                 System.out.printf("%s %s (%s)\n", friend.getFirstName(), friend.getLastName(),
                         friend.getUsername());
@@ -282,33 +283,45 @@ public class Main {
     public static void viewFriendRequests(Member member){
 
         Profile memberProfile = member.getProfile();
-        List<Profile> pendingList = database.getPendingFriendsList(memberProfile);
+
+        if(!database.getPendingFriendsMap().containsKey(memberProfile) || database.getPendingFriendsList(memberProfile).isEmpty())
+            System.out.println("No friend requests to show.");
+
+        else{
+            List<Profile> pendingList = database.getPendingFriendsList(memberProfile);
 
         for (int i = 0; i < pendingList.size(); ++i) {
-            Profile friendProfile = pendingList.get(i);
+                Profile friendProfile = pendingList.get(i);
 
-            System.out.printf("%s %s (%s)\n", friendProfile.getFirstName(), friendProfile.getLastName(),
-                    friendProfile.getUsername());
+                System.out.printf("%s %s (%s)\n", friendProfile.getFirstName(), friendProfile.getLastName(),
+                        friendProfile.getUsername());
 
-            System.out.println("1: Accept 2:Delete 3:Nothing");
-            int ans = input.nextInt();
-            input.nextLine();
+                System.out.println("1: Accept 2:Delete 3:Nothing");
+                int ans = input.nextInt();
+                input.nextLine();
 
-            if (ans == 1) {
-                database.getFriendsList(memberProfile).add(friendProfile);
-                database.getPendingFriendsList(memberProfile).remove(friendProfile);
-                database.getFriendsList(friendProfile).add(memberProfile);
+                if (ans == 1) {
+                    List<Profile> memberList = database.getFriendsMap().getOrDefault(memberProfile, new ArrayList<>());
+                    memberList.add(friendProfile);
+                    database.getFriendsMap().put(memberProfile, memberList);
 
-                NotificationService notificationService = new NotificationService();
+                    database.getPendingFriendsList(memberProfile).remove(friendProfile);
 
-                notificationService.sendNotification(memberProfile.getID(), friendProfile.getProfileId(),
-                        EventType.FRIEND_REQUEST, member.getFirstName()+" "+ member.getLastName()
-                +" accepted your friend request. You're friends now !");
+                    List<Profile> friendList = database.getFriendsMap().getOrDefault(friendProfile, new ArrayList<>());
+                    friendList.add(memberProfile);
+                    database.getFriendsMap().put(friendProfile, friendList);
 
-            } else if (ans == 2) {
-                database.getPendingFriendsList(memberProfile).remove(friendProfile);
-            } else if (ans == 3) continue;
-            else System.out.println("Incorrect input.");
+                    NotificationService notificationService = new NotificationService();
+
+                    notificationService.sendNotification(memberProfile.getID(), friendProfile.getProfileId(),
+                            EventType.FRIEND_REQUEST, member.getFirstName() + " " + member.getLastName()
+                                    + " accepted your friend request. You're friends now !");
+
+                } else if (ans == 2) {
+                    database.getPendingFriendsList(memberProfile).remove(friendProfile);
+                } else if (ans == 3) continue;
+                else System.out.println("Incorrect input.");
+            }
         }
     }
 
@@ -343,7 +356,7 @@ public class Main {
                     break;
 
                 case 4:
-                    addFriends(member);
+                    explore(member);
                     break;
 
                 case 5:
@@ -381,18 +394,18 @@ public class Main {
             System.out.println("Here is Feed !");
             System.out.println();
 
-            if (!database.getFriendsList(member.getProfile()).isEmpty()) {
+            if (database.getFriendsMap().containsKey(member.getProfile()) && !database.getFriendsList(member.getProfile()).isEmpty()) {
                 List<Profile> friendProfiles = database.getFriendsList(member.getProfile());
 
                 for(Profile friendProfile : friendProfiles){
                     database.displayPosts(friendProfile);
                 }
 
-                System.out.println("Interact with the post:\n1: Like 2: Comment 3:Report 4:Nothing");
+                System.out.println("Interact with the post:\n1: Like 2: Comment 3:Share 4:Report 5:Nothing");
                 int ans = input.nextInt();
                 input.nextLine();
 
-                if(ans != 4){
+                if(ans != 5){
                     System.out.println("Enter the Post ID: ");
                     String postId = input.nextLine();
 
@@ -426,6 +439,10 @@ public class Main {
                     }
 
                     if(ans == 3){
+                        database.addPost(member.getProfile(),post);
+                    }
+
+                    if(ans == 4){
                         Report report = new Report();
 
                         System.out.println("choose the reason of your report: ");
@@ -470,8 +487,38 @@ public class Main {
                 }
             }
 
+            if(database.getFollowingMap().containsKey(member.getProfile()) && !database.getFollowingList(member.getProfile()).isEmpty()){
+
+                List<Profile> followingList = database.getFollowingList(member.getProfile());
+
+                for(Profile followedProfile : followingList){
+                    database.displayPosts(followedProfile);
+                }
+
+                System.out.println("Interact with the post:\n1: Like 2:Share 3:Nothing");
+                int ans = input.nextInt();
+                input.nextLine();
+
+                if (ans != 3){
+
+                    System.out.println("Enter the Post ID: ");
+                    String postId = input.nextLine();
+
+                    Post post = database.getPost(postId);
+
+                    if(ans == 1){
+                        database.addLike(post, member.getProfile());
+                    }
+
+                    if(ans == 2){
+                        database.addPost(member.getProfile(), post);
+                    }
+                }
+            }
+
             else {
-                if(!database.getPostsList(member.getProfile()).isEmpty()) {
+                if(database.getPostsMap().containsKey(member.getProfile())
+                        &&!database.getPostsMap(member.getProfile()).isEmpty()) {
                     database.displayPosts(member.getProfile());
                 }
                 else System.out.println("No posts to display.");
@@ -493,7 +540,7 @@ public class Main {
 
         post.setContent(content);
 
-        database.getPostsList(member.getProfile()).add(post);
+        database.addPost(profile, post);
     }
 
     public static void openProfile(Member member){
@@ -614,7 +661,8 @@ public class Main {
         return true;
     }
 
-    public static void addFriends(Member searcher){
+    public static void explore(Member searcher){
+        Profile searcherProfile = searcher.getProfile();
         Map<String, Member> memberMap = database.getMembersRepo();
 
         for(Map.Entry<String,Member> entry: memberMap.entrySet()){
@@ -626,44 +674,73 @@ public class Main {
             System.out.printf("%s %s (%s)\n", member.getFirstName(), member.getLastName(), username);
         }
 
-        System.out.println("Type the username of the friend you want to add: ");
+        System.out.println("Type the username of the friend you want to add/follow: ");
         String friendUsername = input.nextLine();
+
+        System.out.println("1: Add friend 2:Follow ");
+        int ans = input.nextInt();
+        input.nextLine();
+
 
         if(!memberMap.containsKey(friendUsername)) System.out.println("The username doesn't exist");
 
         else {
             Profile friendProfile = memberMap.get(friendUsername).getProfile();
-
-            database.addFriend(friendProfile, searcher.getProfile());
-
             NotificationService notificationService = new NotificationService();
-            notificationService.sendNotification(searcher.getProfile().getProfileId(),
-                    friendProfile.getProfileId(), EventType.FRIEND_REQUEST,
-                    searcher.getFirstName()+" "+searcher.getLastName()+" sent you a friend request");
+
+            if (ans == 1) {
+
+                database.addFriend(friendProfile, searcher.getProfile());
+                System.out.println("your friend request is sent !");
+
+                notificationService.sendNotification(searcherProfile.getProfileId(),
+                        friendProfile.getProfileId(), EventType.FRIEND_REQUEST,
+                        searcher.getFirstName() + " " + searcher.getLastName() + " sent you a friend request");
+            }
+            else{
+                database.follow(searcherProfile, friendProfile);
+
+                notificationService.sendNotification(searcherProfile.getProfileId(),
+                        friendProfile.getProfileId(), EventType.FOLLOW,
+                        searcher.getFirstName() + " " + searcher.getLastName() + " follows you !");
+            }
         }
     }
 
     public static void viewFriends(Member member){
         Profile profile = member.getProfile();
 
-        for(Profile friend : database.getFriendsList(profile)){
-            System.out.printf("%s %s (%s)\n", friend.getFirstName(),
-                    friend.getLastName(), friend.getUsername());
+        System.out.println("Friends: ");
+        if(database.getFriendsMap().containsKey(profile) && !database.getFriendsList(profile).isEmpty()) {
+            for (Profile friend : database.getFriendsList(profile)) {
+                System.out.printf("%s %s (%s)\n", friend.getFirstName(),
+                        friend.getLastName(), friend.getUsername());
+            }
         }
+        else System.out.println("No friends to show.");
+
+        System.out.println("Followers: ");
+        if(database.getFollowersMap().containsKey(profile) && !database.getFollowersList(profile).isEmpty()){
+            for(Profile follower : database.getFollowersList(profile)){
+                System.out.printf("%s %s (%s)\n", follower.getFirstName(),
+                        follower.getLastName(), follower.getUsername());
+            }
+        }
+
+        else System.out.println("No followers to show.");
+
+        System.out.println("Following: ");
+        if(database.getFollowingMap().containsKey(profile) && !database.getFollowingList(profile).isEmpty()){
+            for(Profile followed : database.getFollowingList(profile)){
+                System.out.printf("%s %s (%s)\n", followed.getFirstName(),
+                        followed.getLastName(), followed.getUsername());
+            }
+        }
+
+        else System.out.println("You don't follow anyone.");
     }
 
     public static void openNotification(Member member) {
-
-        if (database.getNotifications().containsKey(member.getProfile().getProfileId())) {
-
-            List<Notification> notificationList = database.getNotifications()
-                    .get(member.getProfile().getProfileId());
-
-            for (Notification notification : notificationList) {
-                System.out.println(notification.getNotificationMessage());
-                System.out.println(notification.getTimestamp());
-                System.out.println("________________________________________________");
-            }
-        }
+        database.displayNotification(member.getProfile().getProfileId());
     }
 }
