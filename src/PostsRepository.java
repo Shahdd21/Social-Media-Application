@@ -14,21 +14,24 @@ public class PostsRepository {
         getPostById = new HashMap<>();
     }
 
-    public void displayPosts(Profile profile){
+    public List<Post> getPostsList(Profile profile){
+        return postsByUser.get(profile);
+    }
 
-        if(postsByUser.containsKey(profile) && !postsByUser.get(profile).isEmpty()) {
-            for (Post post : postsByUser.get(profile)) {
-                System.out.println(post.getAuthorName());
-                System.out.println("postId: " + post.getPostId());
-                System.out.println(post.getDate());
-                System.out.println(post.getContent());
-                System.out.println("Likes: " + getLikesNum(post));
-                System.out.println(".................................................");
-                displayComments(post);
-                System.out.println("-------------------------------------------------");
-            }
-        }
-        else System.out.println("No posts to show.");
+    public Map<Profile, List<Post>> getPostsByUser() {
+        return postsByUser;
+    }
+
+    public Map<Post, List<Comment>> getPostComments() {
+        return postComments;
+    }
+
+    public Map<String, Post> getGetPostByIdMap() {
+        return getPostById;
+    }
+
+    public Map<Post, Set<Profile>> getPostLikes() {
+        return postLikes;
     }
 
     public void addPost(Profile profile, Post post){
@@ -38,50 +41,27 @@ public class PostsRepository {
 
         getPostById.put(post.getPostId(), post);
     }
-
-    public List<Post> getPostsList(Profile profile){
-        return postsByUser.get(profile);
-    }
-
-    public Map<Profile, List<Post>> getPostsByUser() {
-        return postsByUser;
-    }
-
-    public void displayComments(Post post){
-
-        if(postComments.containsKey(post) && !postComments.get(post).isEmpty()) {
-            for (Comment comment : postComments.get(post)) {
-                Profile memberProfile = comment.getAuthorProfile();
-                System.out.print(memberProfile.getFirstName() + " " + memberProfile.getLastName() + ": ");
-                System.out.println(comment.getContent());
-                System.out.println(comment.getTimestamp());
-            }
-        }
-    }
-
     public int getLikesNum(Post post){
        return postLikes.containsKey(post) ? postLikes.get(post).size() : 0 ;
     }
 
     public void addLike(Post post, Profile profile){
-        postLikes.get(post).add(profile);
+        Set<Profile> set = postLikes.getOrDefault(post, new HashSet<>());
+        set.add(profile);
+        postLikes.put(post,set);
     }
 
     public void removeLike(Post post, Profile profile){
         postLikes.get(post).remove(profile);
     }
 
-    public void seeLikesProfiles(Post post){
-        for(Profile profile : postLikes.get(post)){
-            System.out.println(profile.getFirstName()+" "+profile.getLastName());
-        }
-    }
-
     public void addComment(Post post, Comment comment){
-        postComments.get(post).add(comment);
+        List<Comment> list = postComments.getOrDefault(post, new ArrayList<>());
+        list.add(comment);
+        postComments.put(post,list);
     }
 
-    public Post getPost(String id){
+    public Post getPostById(String id){
         return getPostById.get(id);
     }
 }

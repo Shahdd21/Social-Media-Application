@@ -6,14 +6,17 @@ import java.util.Scanner;
 public class Main {
     public static Scanner input = new Scanner(System.in);
     public static Database database = Database.getInstance();
-    public static ChatMediator chatMediator = new ChatManagement();
+    public static ChatMediator chatManager = new ChatManager(database);
+    public static UserManager userManager = new UserManager(database);
+    public static PostManager postManager = new PostManager(database);
+    public static NotificationManager notificationManager = new NotificationManager(database);
 
     public static void main(String[] args) {
 
         Member member = new Member("shawerma","Shahd", "Mahmoud",
                 "shahd@gmail.com", "0123456789","123", false);
         ProfileManager.createProfile(member);
-        database.addMember("shawerma",member);
+        userManager.addMember("shawerma",member);
 
         while(true) {
             startingMenu();
@@ -67,7 +70,7 @@ public class Main {
         member.setPassword(password);
 
         ProfileManager.createProfile(member);
-        database.addMember(member.getUserName(), member);
+        userManager.addMember(member.getUserName(), member);
         System.out.println("You joined the Family !");
 
         mainMenu(member);
@@ -81,8 +84,8 @@ public class Main {
         System.out.println("Password: ");
         String password = input.nextLine();
 
-        if (database.isFoundMember(userName)){
-            Member member = database.getMember(userName);
+        if (userManager.isFoundMember(userName)){
+            Member member = userManager.getMember(userName);
 
             if(member.getPassword().equals(password)) {
                 if(member.isAdmin()) adminMenu(member);
@@ -182,12 +185,12 @@ public class Main {
 
     public static void openInbox(Member member){
 
-        NotificationService notificationService = new NotificationService();
+        NotificationManager notificationManager = new NotificationManager();
 
         System.out.println("Chats: ");
         String memberUsername = member.getUserName();
 
-        Map<String, List<Message>> map = database.getConversations();
+        Map<String, List<Message>> map = chatManager.getConversations();
 
         map.forEach((k,v) -> {
             if(k.contains(memberUsername)){
@@ -208,7 +211,7 @@ public class Main {
             String friendUsername = input.nextLine();
             String combination = (friendUsername.compareTo(memberUsername) < 0 ? friendUsername+"_"+memberUsername :
                     memberUsername+"_"+friendUsername);
-            Map<String, List<Message>> conversations = database.getConversations();
+            Map<String, List<Message>> conversations = chatManager.getConversations();
 
             conversations.forEach((k,v) -> {
                 if(k.equals(combination)){
@@ -235,10 +238,10 @@ public class Main {
                     Message message = new Message(content, ProfileManager.getProfileByUsername(friendUsername),
                             ProfileManager.getProfileByUsername(memberUsername));
 
-                    chatMediator.sendDirectMessage(message, ProfileManager.getProfileByUsername(memberUsername),
+                    chatManager.sendDirectMessage(message, ProfileManager.getProfileByUsername(memberUsername),
                             ProfileManager.getProfileByUsername(friendUsername));
 
-                    notificationService.sendNotification(member.getProfile().getProfileId(),
+                    notificationManager.sendNotification(member.getProfile().getProfileId(),
                             ProfileManager.getProfileByUsername(friendUsername).getProfileId(),
                             EventType.NEW_MESSAGE, member.getFirstName()+" "+
                                     member.getLastName()+" sent you a message");
@@ -248,7 +251,7 @@ public class Main {
             }
         }
         else if (ans == 2) {
-            for(Profile friend : database.getFriendsList(member.getProfile())){
+            for(Profile friend : userManager.getFriendsList(member.getProfile())){
                 System.out.printf("%s %s (%s)\n", friend.getFirstName(), friend.getLastName(),
                         friend.getUsername());
             }
@@ -256,8 +259,8 @@ public class Main {
             System.out.println("Write the username you want to send a message to: ");
             String friendUsername = input.nextLine();
 
-            if(database.isFoundMember(friendUsername)){
-                if(database.getFriendsList(member.getProfile())
+            if(userManager.isFoundMember(friendUsername)){
+                if(userManager.getFriendsList(member.getProfile())
                         .contains(ProfileManager.getProfileByUsername(friendUsername))){
                     System.out.println("Write your first message: ");
                     String content = input.nextLine();
@@ -265,10 +268,10 @@ public class Main {
                     Message message = new Message(content, ProfileManager.getProfileByUsername(friendUsername),
                             member.getProfile());
 
-                    chatMediator.sendDirectMessage(message, ProfileManager.getProfileByUsername(memberUsername),
+                    chatManager.sendDirectMessage(message, ProfileManager.getProfileByUsername(memberUsername),
                             ProfileManager.getProfileByUsername(friendUsername));
 
-                    notificationService.sendNotification(member.getProfile().getProfileId(),
+                    notificationManager.sendNotification(member.getProfile().getProfileId(),
                             ProfileManager.getProfileByUsername(friendUsername).getProfileId(),
                             EventType.NEW_MESSAGE, member.getFirstName()+" "+
                                     member.getLastName()+" sent you a message");
@@ -284,11 +287,11 @@ public class Main {
 
         Profile memberProfile = member.getProfile();
 
-        if(!database.getPendingFriendsMap().containsKey(memberProfile) || database.getPendingFriendsList(memberProfile).isEmpty())
+        if(!userManager.getPendingFriendsMap().containsKey(memberProfile) || userManager.getPendingFriendsList(memberProfile).isEmpty())
             System.out.println("No friend requests to show.");
 
         else{
-            List<Profile> pendingList = database.getPendingFriendsList(memberProfile);
+            List<Profile> pendingList = userManager.getPendingFriendsList(memberProfile);
 
         for (int i = 0; i < pendingList.size(); ++i) {
                 Profile friendProfile = pendingList.get(i);
@@ -301,24 +304,24 @@ public class Main {
                 input.nextLine();
 
                 if (ans == 1) {
-                    List<Profile> memberList = database.getFriendsMap().getOrDefault(memberProfile, new ArrayList<>());
+                    List<Profile> memberList = userManager.getFriendsMap().getOrDefault(memberProfile, new ArrayList<>());
                     memberList.add(friendProfile);
-                    database.getFriendsMap().put(memberProfile, memberList);
+                    userManager.getFriendsMap().put(memberProfile, memberList);
 
-                    database.getPendingFriendsList(memberProfile).remove(friendProfile);
+                    userManager.getPendingFriendsList(memberProfile).remove(friendProfile);
 
-                    List<Profile> friendList = database.getFriendsMap().getOrDefault(friendProfile, new ArrayList<>());
+                    List<Profile> friendList = userManager.getFriendsMap().getOrDefault(friendProfile, new ArrayList<>());
                     friendList.add(memberProfile);
-                    database.getFriendsMap().put(friendProfile, friendList);
+                    userManager.getFriendsMap().put(friendProfile, friendList);
 
-                    NotificationService notificationService = new NotificationService();
+                    NotificationManager notificationManager = new NotificationManager(database);
 
-                    notificationService.sendNotification(memberProfile.getID(), friendProfile.getProfileId(),
+                    notificationManager.sendNotification(memberProfile.getID(), friendProfile.getProfileId(),
                             EventType.FRIEND_REQUEST, member.getFirstName() + " " + member.getLastName()
                                     + " accepted your friend request. You're friends now !");
 
                 } else if (ans == 2) {
-                    database.getPendingFriendsList(memberProfile).remove(friendProfile);
+                    userManager.getPendingFriendsList(memberProfile).remove(friendProfile);
                 } else if (ans == 3) continue;
                 else System.out.println("Incorrect input.");
             }
@@ -388,17 +391,17 @@ public class Main {
 
     public static void openFeed(Member member) {
 
-        NotificationService notificationService = new NotificationService();
+        NotificationManager notificationManager = new NotificationManager();
 
         while (true) {
             System.out.println("Here is Feed !");
             System.out.println();
 
-            if (database.getFriendsMap().containsKey(member.getProfile()) && !database.getFriendsList(member.getProfile()).isEmpty()) {
-                List<Profile> friendProfiles = database.getFriendsList(member.getProfile());
+            if (userManager.getFriendsMap().containsKey(member.getProfile()) && !userManager.getFriendsList(member.getProfile()).isEmpty()) {
+                List<Profile> friendProfiles = userManager.getFriendsList(member.getProfile());
 
                 for(Profile friendProfile : friendProfiles){
-                    database.displayPosts(friendProfile);
+                    userManager.displayPosts(friendProfile);
                 }
 
                 System.out.println("Interact with the post:\n1: Like 2: Comment 3:Share 4:Report 5:Nothing");
@@ -409,12 +412,12 @@ public class Main {
                     System.out.println("Enter the Post ID: ");
                     String postId = input.nextLine();
 
-                    Post post = database.getPost(postId);
+                    Post post = postManager.getPostById(postId);
 
                     if(ans == 1) {
-                        database.addLike(post, member.getProfile());
+                        postManager.addLike(post, member.getProfile());
 
-                        notificationService.sendNotification(member.getProfile().getProfileId(),
+                        notificationManager.sendNotification(member.getProfile().getProfileId(),
                                 post.getProfileId(), EventType.POST_INTERACTION,
                                 member.getFirstName()+" "+member.getLastName()+
                                 " liked your post "+ post.getPostId());
@@ -430,16 +433,16 @@ public class Main {
                         comment.setPost(post);
                         comment.setAuthorProfile(member.getProfile());
 
-                        database.addComment(post,comment);
+                        postManager.addComment(post,comment);
 
-                        notificationService.sendNotification(member.getProfile().getProfileId(),
+                        notificationManager.sendNotification(member.getProfile().getProfileId(),
                                 post.getProfileId(), EventType.POST_INTERACTION,
                                 member.getFirstName()+" "+member.getLastName() +" commented on your post "+
                                 post.getPostId());
                     }
 
                     if(ans == 3){
-                        database.addPost(member.getProfile(),post);
+                        postManager.addPost(member.getProfile(),post);
                     }
 
                     if(ans == 4){
@@ -487,12 +490,12 @@ public class Main {
                 }
             }
 
-            if(database.getFollowingMap().containsKey(member.getProfile()) && !database.getFollowingList(member.getProfile()).isEmpty()){
+            if(userManager.getFollowingMap().containsKey(member.getProfile()) && !userManager.getFollowingList(member.getProfile()).isEmpty()){
 
-                List<Profile> followingList = database.getFollowingList(member.getProfile());
+                List<Profile> followingList = userManager.getFollowingList(member.getProfile());
 
                 for(Profile followedProfile : followingList){
-                    database.displayPosts(followedProfile);
+                    userManager.displayPosts(followedProfile);
                 }
 
                 System.out.println("Interact with the post:\n1: Like 2:Share 3:Nothing");
@@ -504,22 +507,22 @@ public class Main {
                     System.out.println("Enter the Post ID: ");
                     String postId = input.nextLine();
 
-                    Post post = database.getPost(postId);
+                    Post post = postManager.getPostById(postId);
 
                     if(ans == 1){
-                        database.addLike(post, member.getProfile());
+                        postManager.addLike(post, member.getProfile());
                     }
 
                     if(ans == 2){
-                        database.addPost(member.getProfile(), post);
+                        postManager.addPost(member.getProfile(), post);
                     }
                 }
             }
 
             else {
-                if(database.getPostsMap().containsKey(member.getProfile())
-                        &&!database.getPostsMap(member.getProfile()).isEmpty()) {
-                    database.displayPosts(member.getProfile());
+                if(postManager.getPostsMap().containsKey(member.getProfile())
+                        &&!postManager.getPostsList(member.getProfile()).isEmpty()) {
+                    postManager.displayPosts(member.getProfile());
                 }
                 else System.out.println("No posts to display.");
             }
@@ -540,7 +543,7 @@ public class Main {
 
         post.setContent(content);
 
-        database.addPost(profile, post);
+        postManager.addPost(profile, post);
     }
 
     public static void openProfile(Member member){
@@ -560,7 +563,7 @@ public class Main {
         System.out.println("\u2022 Birthdate: "+ profile.getBirthdate());
         System.out.println("\u2022 Join Date: "+ profile.getJoinDate());
         System.out.println("---------------------------------------------");
-        database.displayPosts(profile);
+        postManager.displayPosts(profile);
         System.out.println("---------------------------------------------");
         System.out.println("Want to edit your profile? Y/N");
 
@@ -663,7 +666,7 @@ public class Main {
 
     public static void explore(Member searcher){
         Profile searcherProfile = searcher.getProfile();
-        Map<String, Member> memberMap = database.getMembersRepo();
+        Map<String, Member> memberMap = userManager.getMembersRepo();
 
         for(Map.Entry<String,Member> entry: memberMap.entrySet()){
             String username = entry.getKey();
@@ -686,21 +689,21 @@ public class Main {
 
         else {
             Profile friendProfile = memberMap.get(friendUsername).getProfile();
-            NotificationService notificationService = new NotificationService();
+            NotificationManager notificationManager = new NotificationManager();
 
             if (ans == 1) {
 
-                database.addFriend(friendProfile, searcher.getProfile());
+                userManager.addFriend(friendProfile, searcher.getProfile());
                 System.out.println("your friend request is sent !");
 
-                notificationService.sendNotification(searcherProfile.getProfileId(),
+                notificationManager.sendNotification(searcherProfile.getProfileId(),
                         friendProfile.getProfileId(), EventType.FRIEND_REQUEST,
                         searcher.getFirstName() + " " + searcher.getLastName() + " sent you a friend request");
             }
             else{
-                database.follow(searcherProfile, friendProfile);
+                userManager.follow(searcherProfile, friendProfile);
 
-                notificationService.sendNotification(searcherProfile.getProfileId(),
+                notificationManager.sendNotification(searcherProfile.getProfileId(),
                         friendProfile.getProfileId(), EventType.FOLLOW,
                         searcher.getFirstName() + " " + searcher.getLastName() + " follows you !");
             }
@@ -711,8 +714,8 @@ public class Main {
         Profile profile = member.getProfile();
 
         System.out.println("Friends: ");
-        if(database.getFriendsMap().containsKey(profile) && !database.getFriendsList(profile).isEmpty()) {
-            for (Profile friend : database.getFriendsList(profile)) {
+        if(userManager.getFriendsMap().containsKey(profile) && !userManager.getFriendsList(profile).isEmpty()) {
+            for (Profile friend : userManager.getFriendsList(profile)) {
                 System.out.printf("%s %s (%s)\n", friend.getFirstName(),
                         friend.getLastName(), friend.getUsername());
             }
@@ -720,8 +723,8 @@ public class Main {
         else System.out.println("No friends to show.");
 
         System.out.println("Followers: ");
-        if(database.getFollowersMap().containsKey(profile) && !database.getFollowersList(profile).isEmpty()){
-            for(Profile follower : database.getFollowersList(profile)){
+        if(userManager.getFollowersMap().containsKey(profile) && !userManager.getFollowersList(profile).isEmpty()){
+            for(Profile follower : userManager.getFollowersList(profile)){
                 System.out.printf("%s %s (%s)\n", follower.getFirstName(),
                         follower.getLastName(), follower.getUsername());
             }
@@ -730,8 +733,8 @@ public class Main {
         else System.out.println("No followers to show.");
 
         System.out.println("Following: ");
-        if(database.getFollowingMap().containsKey(profile) && !database.getFollowingList(profile).isEmpty()){
-            for(Profile followed : database.getFollowingList(profile)){
+        if(userManager.getFollowingMap().containsKey(profile) && !userManager.getFollowingList(profile).isEmpty()){
+            for(Profile followed : userManager.getFollowingList(profile)){
                 System.out.printf("%s %s (%s)\n", followed.getFirstName(),
                         followed.getLastName(), followed.getUsername());
             }
@@ -741,6 +744,6 @@ public class Main {
     }
 
     public static void openNotification(Member member) {
-        database.displayNotification(member.getProfile().getProfileId());
+        notificationManager.displayNotification(member.getProfile().getProfileId());
     }
 }
