@@ -27,6 +27,23 @@ public class PostManager {
         else System.out.println("No posts to show.");
     }
 
+    public void displayPosts(Page page){
+        Map<Page, List<Post>> postsByPage = postsRepository.getPostsByPageMap();
+
+        if(postsByPage.containsKey(page) && !postsByPage.get(page).isEmpty()){
+            for(Post post : postsByPage.get(page)){
+                System.out.println(post.getAuthorName());
+                System.out.println("postId: " + post.getPostId());
+                System.out.println(post.getDate());
+                System.out.println(post.getContent());
+                System.out.println("Likes: " + postsRepository.getLikesNum(post));
+                System.out.println(".................................................");
+                displayComments(post);
+                System.out.println("-------------------------------------------------");
+            }
+        }
+    }
+
     public void displayComments(Post post){
         Map<Post, List<Comment>> postComments = postsRepository.getPostComments();
 
@@ -76,5 +93,9 @@ public class PostManager {
 
     public void addPost(Profile profile, Post post){
         postsRepository.addPost(profile, post);
+    }
+
+    public void addPost(Page page, Post post){
+        postsRepository.addPost(page, post);
     }
 }

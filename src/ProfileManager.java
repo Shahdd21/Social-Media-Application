@@ -17,6 +17,10 @@ public class ProfileManager {
         return ProfilesByUsername.get(username);
     }
 
+    public static boolean findById(String id){
+        return ProfilesById.containsKey(id);
+    }
+
     public static boolean find(String username){
         return ProfilesByUsername.containsKey(username);
     }

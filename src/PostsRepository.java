@@ -3,6 +3,7 @@ import java.util.*;
 public class PostsRepository {
 
     private final Map<Profile, List<Post>> postsByUser;
+    private final Map<Page, List<Post>> postsByPage;
     private final Map<String, Post> getPostById; // post id
     private final Map<Post, List<Comment>> postComments;
     private final Map<Post, Set<Profile>> postLikes;
@@ -12,6 +13,7 @@ public class PostsRepository {
         postsByUser = new HashMap<>();
         postLikes = new HashMap<>();
         getPostById = new HashMap<>();
+        postsByPage = new HashMap<>();
     }
 
     public List<Post> getPostsList(Profile profile){
@@ -20,6 +22,14 @@ public class PostsRepository {
 
     public Map<Profile, List<Post>> getPostsByUser() {
         return postsByUser;
+    }
+
+    public Map<Page, List<Post>> getPostsByPageMap(){
+        return postsByPage;
+    }
+
+    public List<Post> getPostsListByPage(Page page){
+        return postsByPage.get(page);
     }
 
     public Map<Post, List<Comment>> getPostComments() {
@@ -38,6 +48,14 @@ public class PostsRepository {
         List<Post> list = postsByUser.getOrDefault(profile, new ArrayList<>());
         list.add(post);
         postsByUser.put(profile,list);
+
+        getPostById.put(post.getPostId(), post);
+    }
+
+    public void addPost(Page page, Post post){
+        List<Post> list = postsByPage.getOrDefault(page, new ArrayList<>());
+        list.add(post);
+        postsByPage.put(page,list);
 
         getPostById.put(post.getPostId(), post);
     }

@@ -1,7 +1,7 @@
 import java.util.List;
 import java.util.Map;
 
-public class ChatManager implements ChatMediator{
+public class ChatManager{
 
     private final ChatRepository chatRepository;
 
@@ -9,7 +9,6 @@ public class ChatManager implements ChatMediator{
         this.chatRepository = database.getChatRepository();
     }
 
-    @Override
     public void sendDirectMessage(Message message, Profile sender, Profile recipient) {
 
         // Normalize key by ordering the usernames lexicographically

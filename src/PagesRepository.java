@@ -1,10 +1,57 @@
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class PagesRepository {
-    private final Map<String, Page> pages;
+    private final Map<String, Page> pagesByName;
+    private final Map<String, Page> pagesById;
+    private final Map<Profile, List<Page>> pagesByProfile;
+    private final Map<Page, List<Profile>> followersByPage;
 
     public PagesRepository() {
-        this.pages = new HashMap<>();
+        this.pagesByName = new HashMap<>();
+        this.pagesByProfile = new HashMap<>();
+        this.followersByPage = new HashMap<>();
+        this.pagesById = new HashMap<>();
+    }
+
+    public Page getPageByName(String pageName){
+        return pagesByName.get(pageName);
+    }
+
+    public Page getPageById(String id){
+        return pagesById.get(id);
+    }
+
+    public List<Page> getPagesByProfile(Profile profile){
+        if(pagesByProfile.containsKey(profile))
+           return pagesByProfile.get(profile);
+
+        return new ArrayList<>();
+    }
+
+    public Map<String, Page> getPagesById() {
+        return pagesById;
+    }
+
+    public Map<Profile, List<Page>> getPagesByProfileMap(){
+        return pagesByProfile;
+    }
+
+    public Map<String, Page> getPagesByName() {
+        return pagesByName;
+    }
+
+    public Map<Page, List<Profile>> getFollowersByPage() {
+        return followersByPage;
+    }
+
+    public List<Profile> getFollowersList(Page page){
+        return followersByPage.get(page);
+    }
+
+    public Map<Profile, List<Page>> getPagesByProfile() {
+        return pagesByProfile;
     }
 }

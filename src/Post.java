@@ -4,16 +4,21 @@ public class Post implements ReportedEntity{
     private String content;
     private final String authorName;
     private final String postId;
-    private final String profileId;
+    private final String creatorId;
     private final LocalDate date;
 
-    public Post(String profileId) {
+    public Post(Profile profile) {
         this.date = LocalDate.now();
         this.postId = System.currentTimeMillis()%1000 + "";
-        this.profileId = profileId;
+        this.creatorId = profile.getProfileId();
+        this.authorName = profile.getFirstName() + " " + profile.getLastName();
+    }
 
-        Profile profile = ProfileManager.getProfileById(profileId);
-        this.authorName = profile.getFirstName()+" "+ profile.getLastName();
+    public Post(Page page){
+        this.date = LocalDate.now();
+        this.postId = System.currentTimeMillis()%1000 + "";
+        this.creatorId = page.getPageId();
+        this.authorName = page.getPageName();
     }
 
     public Post getPost() {
@@ -40,8 +45,8 @@ public class Post implements ReportedEntity{
         return authorName;
     }
 
-    public String getProfileId() {
-        return profileId;
+    public String getCreatorId() {
+        return creatorId;
     }
 
     @Override

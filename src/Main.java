@@ -6,10 +6,11 @@ import java.util.Scanner;
 public class Main {
     public static Scanner input = new Scanner(System.in);
     public static Database database = Database.getInstance();
-    public static ChatMediator chatManager = new ChatManager(database);
+    public static ChatManager chatManager = new ChatManager(database);
     public static UserManager userManager = new UserManager(database);
     public static PostManager postManager = new PostManager(database);
     public static NotificationManager notificationManager = new NotificationManager(database);
+    public static PageManager pageManager = new PageManager(database);
 
     public static void main(String[] args) {
 
@@ -131,17 +132,19 @@ public class Main {
         while(true) {
             System.out.printf("Hello, %s !\n", member.getFirstName());
 
-            System.out.println("\t1) Profile");
-            System.out.println("\t2) Feed");
-            System.out.println("\t3) Inbox");
-            System.out.println("\t4) Create post");
-            System.out.println("\t5) Explore");
-            System.out.println("\t6) View Friends");
-            System.out.println("\t7) View Friend Requests");
-            System.out.println("\t8) Notification");
-            System.out.println("\t9) Log out");
+            System.out.print("\t1) Profile");
+            System.out.print("\t\t\t\t2) Feed");
+            System.out.println("\t\t\t\t3) Inbox");
+            System.out.print("\t4) Create post");
+            System.out.print("\t\t\t5) Explore");
+            System.out.println("\t\t\t6) View Friends");
+            System.out.print("\t7) View Friend Requests");
+            System.out.print("\t8) Manage Pages");
+            System.out.println("\t\t9) Notification");
+            System.out.print("\t10) Search");
+            System.out.println("\t\t\t\t11) Log out");
 
-            System.out.println("Choose between 1-8: ");
+            System.out.println("Choose between 1-11: ");
             int ans = input.nextInt();
             input.nextLine();
 
@@ -175,24 +178,32 @@ public class Main {
                     break;
 
                 case 8:
+                    managePages(member);
+                    break;
+
+                case 9:
                     openNotification(member);
                     break;
 
-                case 9:  return;
+                case 10:
+                    search(member);
+                    break;
+
+                case 11:  return;
             }
         }
     }
 
     public static void openInbox(Member member){
 
-        NotificationManager notificationManager = new NotificationManager();
+        NotificationManager notificationManager = new NotificationManager(database);
 
         System.out.println("Chats: ");
         String memberUsername = member.getUserName();
 
-        Map<String, List<Message>> map = chatManager.getConversations();
+        Map<String, List<Message>> conversations = chatManager.getConversations();
 
-        map.forEach((k,v) -> {
+        conversations.forEach((k,v) -> {
             if(k.contains(memberUsername)){
                 String[] usernames = k.split("_");
                 String friendUsername = (usernames[0].equals(memberUsername) ? usernames[1] : usernames[0] );
@@ -211,7 +222,6 @@ public class Main {
             String friendUsername = input.nextLine();
             String combination = (friendUsername.compareTo(memberUsername) < 0 ? friendUsername+"_"+memberUsername :
                     memberUsername+"_"+friendUsername);
-            Map<String, List<Message>> conversations = chatManager.getConversations();
 
             conversations.forEach((k,v) -> {
                 if(k.equals(combination)){
@@ -391,7 +401,7 @@ public class Main {
 
     public static void openFeed(Member member) {
 
-        NotificationManager notificationManager = new NotificationManager();
+        NotificationManager notificationManager = new NotificationManager(database);
 
         while (true) {
             System.out.println("Here is Feed !");
@@ -401,7 +411,7 @@ public class Main {
                 List<Profile> friendProfiles = userManager.getFriendsList(member.getProfile());
 
                 for(Profile friendProfile : friendProfiles){
-                    userManager.displayPosts(friendProfile);
+                    postManager.displayPosts(friendProfile);
                 }
 
                 System.out.println("Interact with the post:\n1: Like 2: Comment 3:Share 4:Report 5:Nothing");
@@ -418,7 +428,7 @@ public class Main {
                         postManager.addLike(post, member.getProfile());
 
                         notificationManager.sendNotification(member.getProfile().getProfileId(),
-                                post.getProfileId(), EventType.POST_INTERACTION,
+                                post.getCreatorId(), EventType.POST_INTERACTION,
                                 member.getFirstName()+" "+member.getLastName()+
                                 " liked your post "+ post.getPostId());
                     }
@@ -436,7 +446,7 @@ public class Main {
                         postManager.addComment(post,comment);
 
                         notificationManager.sendNotification(member.getProfile().getProfileId(),
-                                post.getProfileId(), EventType.POST_INTERACTION,
+                                post.getCreatorId(), EventType.POST_INTERACTION,
                                 member.getFirstName()+" "+member.getLastName() +" commented on your post "+
                                 post.getPostId());
                     }
@@ -495,7 +505,7 @@ public class Main {
                 List<Profile> followingList = userManager.getFollowingList(member.getProfile());
 
                 for(Profile followedProfile : followingList){
-                    userManager.displayPosts(followedProfile);
+                    postManager.displayPosts(followedProfile);
                 }
 
                 System.out.println("Interact with the post:\n1: Like 2:Share 3:Nothing");
@@ -537,7 +547,7 @@ public class Main {
     public static void createPost(Member member){
 
         Profile profile = member.getProfile();
-        Post post = new Post(profile.getProfileId());
+        Post post = new Post(profile);
         System.out.println("What's on your mind? ");
         String content = input.nextLine();
 
@@ -665,9 +675,12 @@ public class Main {
     }
 
     public static void explore(Member searcher){
+
+        //people exploring
         Profile searcherProfile = searcher.getProfile();
         Map<String, Member> memberMap = userManager.getMembersRepo();
 
+        System.out.println("**People**");
         for(Map.Entry<String,Member> entry: memberMap.entrySet()){
             String username = entry.getKey();
             Member member = entry.getValue();
@@ -677,35 +690,102 @@ public class Main {
             System.out.printf("%s %s (%s)\n", member.getFirstName(), member.getLastName(), username);
         }
 
-        System.out.println("Type the username of the friend you want to add/follow: ");
-        String friendUsername = input.nextLine();
+//        System.out.println("Type the username of the friend you want to add/follow: ");
+//        String friendUsername = input.nextLine();
+//
+//        System.out.println("1: Add friend 2:Follow ");
+//        int ans = input.nextInt();
+//        input.nextLine();
 
-        System.out.println("1: Add friend 2:Follow ");
-        int ans = input.nextInt();
-        input.nextLine();
 
+        //if(!memberMap.containsKey(friendUsername)) System.out.println("The username doesn't exist");
 
-        if(!memberMap.containsKey(friendUsername)) System.out.println("The username doesn't exist");
+//        else {
+//            Profile friendProfile = memberMap.get(friendUsername).getProfile();
+//            NotificationManager notificationManager = new NotificationManager(database);
+//
+//            if (ans == 1) {
+//
+//                userManager.addFriend(friendProfile, searcher.getProfile());
+//                System.out.println("your friend request is sent !");
+//
+//                notificationManager.sendNotification(searcherProfile.getProfileId(),
+//                        friendProfile.getProfileId(), EventType.FRIEND_REQUEST,
+//                        searcher.getFirstName() + " " + searcher.getLastName() + " sent you a friend request");
+//            }
+//            else{
+//                userManager.follow(searcherProfile, friendProfile);
+//
+//                notificationManager.sendNotification(searcherProfile.getProfileId(),
+//                        friendProfile.getProfileId(), EventType.FOLLOW,
+//                        searcher.getFirstName() + " " + searcher.getLastName() + " follows you !");
+//            }
+//        }
 
-        else {
-            Profile friendProfile = memberMap.get(friendUsername).getProfile();
-            NotificationManager notificationManager = new NotificationManager();
+        //pages exploring
+        Map<String, Page> pagesMap = pageManager.getPages();
 
-            if (ans == 1) {
-
-                userManager.addFriend(friendProfile, searcher.getProfile());
-                System.out.println("your friend request is sent !");
-
-                notificationManager.sendNotification(searcherProfile.getProfileId(),
-                        friendProfile.getProfileId(), EventType.FRIEND_REQUEST,
-                        searcher.getFirstName() + " " + searcher.getLastName() + " sent you a friend request");
+        if(pagesMap != null){
+            System.out.println("**Pages**");
+            for(Map.Entry<String, Page> entry : pagesMap.entrySet()){
+                System.out.println(entry.getKey());
             }
-            else{
-                userManager.follow(searcherProfile, friendProfile);
+        }
+    }
 
-                notificationManager.sendNotification(searcherProfile.getProfileId(),
-                        friendProfile.getProfileId(), EventType.FOLLOW,
-                        searcher.getFirstName() + " " + searcher.getLastName() + " follows you !");
+    public static void search(Member member){
+
+        Profile memberProfile = member.getProfile();
+
+        while(true) {
+            System.out.println("You want to search for: ");
+            System.out.println("1. People");
+            System.out.println("2. Pages");
+            System.out.println("3. Return");
+
+            int ans = input.nextInt();
+            input.nextLine();
+
+            switch (ans) {
+                case 1: {
+
+                }
+                break;
+
+                case 2: {
+                    System.out.println("Enter the name of the page: ");
+                    String pageName = input.nextLine();
+
+                    Map<String, Page> pages = pageManager.getPages();
+
+                    for (Map.Entry<String, Page> entry : pages.entrySet()) {
+                        if (entry.getKey().equals(pageName) || entry.getKey().contains(pageName)) {
+                            System.out.printf("%s (ID: %s)\n", entry.getValue().getPageName(), entry.getValue().getPageId());
+                        }
+                    }
+
+                    System.out.println("1.Open Page  2.Follow Page 3.Return");
+
+                    int choice = input.nextInt();
+                    input.nextLine();
+
+                    if(choice != 3){
+                        System.out.println("Enter the id of the page: ");
+                        String id = input.nextLine();
+                        Page chosenPage = pageManager.getPageById(id);
+
+                        if(choice == 1) openPageProfile(chosenPage);
+
+                        else if(choice == 2) pageManager.followPage(chosenPage, memberProfile);
+
+                        else System.out.println("Invalid choice. Try again.");
+                    }
+                    else break;
+                }
+                break;
+
+                case 3:
+                    break;
             }
         }
     }
@@ -745,5 +825,108 @@ public class Main {
 
     public static void openNotification(Member member) {
         notificationManager.displayNotification(member.getProfile().getProfileId());
+    }
+
+    public static void managePages(Member member){
+
+        Profile memberProfile = member.getProfile();
+
+        while(true) {
+            System.out.println("Page Management");
+            System.out.println("1.Create new page");
+            System.out.println("2.View My Pages");
+            System.out.println("3.Switch to Page Mode");
+            System.out.println("4.Return");
+
+            int ans = input.nextInt();
+            input.nextLine();
+
+            switch (ans){
+                case 1:
+                {
+                    System.out.println("Enter the name of the page: ");
+                    String name = input.nextLine();
+                    System.out.println("Enter the category: ");
+                    String category = input.nextLine();
+                    System.out.println("Enter the description (Bio): ");
+                    String bio = input.nextLine();
+
+                    pageManager.createPage(name,category,bio, memberProfile);
+                }
+                break;
+
+                case 2:
+                    pageManager.displayPagesList(memberProfile);
+                break;
+
+                case 3:{
+                    System.out.println("Enter the name of the page: ");
+                    String name = input.nextLine();
+                    Page page = pageManager.getPageByName(name);
+
+                    if(page != null) pageMode(page);
+                    else System.out.println("No such page with this name.");
+                }
+                break;
+
+                case 4:
+                    return;
+            }
+        }
+    }
+
+    public static void pageMode(Page page){
+
+        while(true) {
+            System.out.printf("Managing Page: %s\n", page.getPageName());
+
+            System.out.println("1. Add Post");
+            System.out.println("2. View Page Posts");
+            System.out.println("3. View Followers");
+            System.out.println("4. Back to Profile");
+
+            System.out.println("Enter your choice: ");
+
+            int ans = input.nextInt();
+            input.nextLine();
+
+            switch (ans){
+                case 1:
+                    createPost(page);
+                    break;
+
+                case 2:
+                    openPageProfile(page);
+                    break;
+
+                case 3:
+                    viewPageFollowers(page);
+                    break;
+
+                case 4: return;
+            }
+        }
+    }
+
+    public static void createPost(Page page){
+
+        Post post = new Post(page);
+        System.out.println("What's on your mind? ");
+        String content = input.nextLine();
+
+        post.setContent(content);
+
+        postManager.addPost(page, post);
+    }
+
+    public static void openPageProfile(Page page){
+        System.out.println("\t\t\tBio: ");
+        System.out.println("\t"+page.getBio());
+        System.out.println("Category: "+page.getCategory());
+        postManager.displayPosts(page);
+    }
+
+    public static void viewPageFollowers(Page page){
+        pageManager.displayFollowers(page);
     }
 }
