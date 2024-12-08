@@ -7,12 +7,10 @@ public class PagesRepository {
     private final Map<String, Page> pagesByName;
     private final Map<String, Page> pagesById;
     private final Map<Profile, List<Page>> pagesByProfile;
-    private final Map<Page, List<Profile>> followersByPage;
 
     public PagesRepository() {
         this.pagesByName = new HashMap<>();
         this.pagesByProfile = new HashMap<>();
-        this.followersByPage = new HashMap<>();
         this.pagesById = new HashMap<>();
     }
 
@@ -41,14 +39,6 @@ public class PagesRepository {
 
     public Map<String, Page> getPagesByName() {
         return pagesByName;
-    }
-
-    public Map<Page, List<Profile>> getFollowersByPage() {
-        return followersByPage;
-    }
-
-    public List<Profile> getFollowersList(Page page){
-        return followersByPage.get(page);
     }
 
     public Map<Profile, List<Page>> getPagesByProfile() {

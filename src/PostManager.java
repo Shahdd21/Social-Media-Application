@@ -9,11 +9,11 @@ public class PostManager {
         this.postsRepository = database.getPostsRepository();
     }
 
-    public void displayPosts(Profile profile){
-        Map<Profile, List<Post>> postsByUser = postsRepository.getPostsByUser();
+    public void displayPosts(FollowedEntity followedEntity){
+        Map<FollowedEntity, List<Post>> postsByUser = postsRepository.getPostsByUserAndPage();
 
-        if(postsByUser.containsKey(profile) && !postsByUser.get(profile).isEmpty()) {
-            for (Post post : postsByUser.get(profile)) {
+        if(postsByUser.containsKey(followedEntity) && !postsByUser.get(followedEntity).isEmpty()) {
+            for (Post post : postsByUser.get(followedEntity)) {
                 System.out.println(post.getAuthorName());
                 System.out.println("postId: " + post.getPostId());
                 System.out.println(post.getDate());
@@ -25,23 +25,6 @@ public class PostManager {
             }
         }
         else System.out.println("No posts to show.");
-    }
-
-    public void displayPosts(Page page){
-        Map<Page, List<Post>> postsByPage = postsRepository.getPostsByPageMap();
-
-        if(postsByPage.containsKey(page) && !postsByPage.get(page).isEmpty()){
-            for(Post post : postsByPage.get(page)){
-                System.out.println(post.getAuthorName());
-                System.out.println("postId: " + post.getPostId());
-                System.out.println(post.getDate());
-                System.out.println(post.getContent());
-                System.out.println("Likes: " + postsRepository.getLikesNum(post));
-                System.out.println(".................................................");
-                displayComments(post);
-                System.out.println("-------------------------------------------------");
-            }
-        }
     }
 
     public void displayComments(Post post){
@@ -61,8 +44,8 @@ public class PostManager {
         return postsRepository.getPostsList(profile);
     }
 
-    public Map<Profile, List<Post>> getPostsMap(){
-        return postsRepository.getPostsByUser();
+    public Map<FollowedEntity, List<Post>> getPostsMap(){
+        return postsRepository.getPostsByUserAndPage();
     }
 
     public int getLikesNum(Post post){
@@ -91,11 +74,7 @@ public class PostManager {
         return postsRepository.getPostById(id);
     }
 
-    public void addPost(Profile profile, Post post){
-        postsRepository.addPost(profile, post);
-    }
-
-    public void addPost(Page page, Post post){
-        postsRepository.addPost(page, post);
+    public void addPost(FollowedEntity followedEntity, Post post){
+        postsRepository.addPost(followedEntity, post);
     }
 }

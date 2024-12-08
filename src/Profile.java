@@ -2,7 +2,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Profile implements ReportedEntity{
+public class Profile implements FollowedEntity{
     private final String profileId;
     private final String username;
     private String firstName;
@@ -119,17 +119,17 @@ public class Profile implements ReportedEntity{
     }
 
     @Override
-    public ReportedEntity getEntity() {
+    public FollowedEntity getEntity() {
         return this;
+    }
+
+    @Override
+    public String getFullName() {
+        return firstName+" "+lastName;
     }
 
     @Override
     public String getID() {
         return profileId;
-    }
-
-    @Override
-    public String getType() {
-        return "Profile";
     }
 }

@@ -1,24 +1,17 @@
 import java.time.LocalDate;
 
-public class Post implements ReportedEntity{
+public class Post{
     private String content;
     private final String authorName;
     private final String postId;
     private final String creatorId;
     private final LocalDate date;
 
-    public Post(Profile profile) {
+    public Post(FollowedEntity followedEntity){
         this.date = LocalDate.now();
         this.postId = System.currentTimeMillis()%1000 + "";
-        this.creatorId = profile.getProfileId();
-        this.authorName = profile.getFirstName() + " " + profile.getLastName();
-    }
-
-    public Post(Page page){
-        this.date = LocalDate.now();
-        this.postId = System.currentTimeMillis()%1000 + "";
-        this.creatorId = page.getPageId();
-        this.authorName = page.getPageName();
+        this.creatorId = followedEntity.getID();
+        this.authorName = followedEntity.getFullName();
     }
 
     public Post getPost() {
@@ -47,20 +40,5 @@ public class Post implements ReportedEntity{
 
     public String getCreatorId() {
         return creatorId;
-    }
-
-    @Override
-    public ReportedEntity getEntity() {
-        return this;
-    }
-
-    @Override
-    public String getID() {
-        return postId;
-    }
-
-    @Override
-    public String getType() {
-        return "Post";
     }
 }

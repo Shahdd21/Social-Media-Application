@@ -22,17 +22,6 @@ public class PageManager {
         pagesRepository.getPagesById().put(page.getPageId(), page);
     }
 
-    public void followPage(Page page, Profile follower){
-        List<Profile> followers = pagesRepository.getFollowersByPage().getOrDefault(page, new ArrayList<>());
-        followers.add(follower);
-
-        pagesRepository.getFollowersByPage().put(page,followers);
-    }
-
-    public void unfollowPage(){
-
-    }
-
     public void addPostToPage(){
 
     }
@@ -50,25 +39,13 @@ public class PageManager {
 
         if(!pageList.isEmpty()){
             for(Page page : pageList){
-                System.out.println(page.getPageName());
+                System.out.printf("%s (%s)\n", page.getPageName(), page.getPageId());
             }
         }
 
         else {
             System.out.println("No pages to show.");
         }
-    }
-
-    public void displayFollowers(Page page){
-
-        if(pagesRepository.getFollowersByPage().containsKey(page) && !pagesRepository.getFollowersList(page).isEmpty()) {
-            List<Profile> followers = pagesRepository.getFollowersList(page);
-            for (Profile profile : followers) {
-                System.out.printf("%s %s (%s)\n", profile.getFirstName(), profile.getLastName(), profile.getUsername());
-            }
-        }
-
-        else System.out.println("There are no followers.");
     }
 
     public Page getPageByName(String name){

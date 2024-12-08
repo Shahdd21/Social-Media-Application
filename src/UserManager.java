@@ -12,20 +12,32 @@ public class UserManager {
         userRepository.addMember(username, member);
     }
 
-    public void addFriend(Profile senderProfile, Profile friendProfile){
-        userRepository.addFriend(senderProfile, friendProfile);
+    public void addFriend(Profile friendProfile, Profile senderProfile){
+        userRepository.addFriend(friendProfile, senderProfile);
     }
 
     public void deleteFriend(Profile senderProfile, Profile friendProfile){
         userRepository.deleteFriend(senderProfile, friendProfile);
     }
 
-    public void follow(Profile senderProfile, Profile friendProfile){
-        userRepository.follow(senderProfile, friendProfile);
+    public void follow(FollowedEntity followedEntity, FollowedEntity followingEntity){
+        userRepository.follow(followedEntity, followingEntity);
     }
 
-    public void unfollow(Profile senderProfile, Profile friendProfile){
-        userRepository.unfollow(senderProfile, friendProfile);
+    public void unfollow(FollowedEntity followingEntity, FollowedEntity followedEntity){
+        userRepository.unfollow(followingEntity, followedEntity);
+    }
+
+    public void displayFollowers(FollowedEntity followedEntity){
+
+        if(userRepository.getFollowersMap().containsKey(followedEntity) && !userRepository.getFollowersList(followedEntity).isEmpty()) {
+            List<FollowedEntity> followers = userRepository.getFollowersList(followedEntity);
+            for (FollowedEntity follower : followers) {
+                System.out.printf("%s \n", follower.getFullName());
+            }
+        }
+
+        else System.out.println("There are no followers.");
     }
 
     public List<Profile> getFriendsList(Profile profile){
@@ -56,20 +68,20 @@ public class UserManager {
         return userRepository.isFoundMember(username);
     }
 
-    public Map<Profile, List<Profile>> getFollowingMap(){
+    public Map<FollowedEntity, List<FollowedEntity>> getFollowingMap(){
         return userRepository.getFollowingMap();
     }
 
-    public Map<Profile, List<Profile>> getFollowersMap(){
+    public Map<FollowedEntity, List<FollowedEntity>> getFollowersMap(){
         return userRepository.getFollowersMap();
     }
 
-    public List<Profile> getFollowersList(Profile profile){
-        return userRepository.getFollowersList(profile);
+    public List<FollowedEntity> getFollowersList(FollowedEntity followedEntity){
+        return userRepository.getFollowersList(followedEntity);
     }
 
-    public List<Profile> getFollowingList(Profile profile){
-        return userRepository.getFollowingList(profile);
+    public List<FollowedEntity> getFollowingList(FollowedEntity followedEntity){
+        return userRepository.getFollowingList(followedEntity);
     }
 
 }

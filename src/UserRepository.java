@@ -7,8 +7,8 @@ public class UserRepository {
     private final Map<String, Member> membersRepo;
     private final Map<Profile, List<Profile>> friendsMap;
     private final Map<Profile, List<Profile>> pendingFriendsMap;
-    private final Map<Profile, List<Profile>> followingMap;
-    private final Map<Profile, List<Profile>> followersMap;
+    private final Map<FollowedEntity, List<FollowedEntity>> followingMap;
+    private final Map<FollowedEntity, List<FollowedEntity>> followersMap;
 
     public UserRepository() {
         this.membersRepo = new HashMap<>();
@@ -22,46 +22,47 @@ public class UserRepository {
         membersRepo.put(username, member);
     }
 
-    public void addFriend(Profile senderProfile, Profile friendProfile){
-        List<Profile> list = pendingFriendsMap.getOrDefault(senderProfile, new ArrayList<>());
-        if(!list.contains(friendProfile))
-           list.add(friendProfile);
-        pendingFriendsMap.put(senderProfile,list);
+    public void addFriend(Profile friendProfile, Profile senderProfile){
+        List<Profile> list = pendingFriendsMap.getOrDefault(friendProfile, new ArrayList<>());
+        if(!list.contains(senderProfile))
+           list.add(senderProfile);
+        pendingFriendsMap.put(friendProfile,list);
     }
 
     public void deleteFriend(Profile senderProfile, Profile friendProfile){
         friendsMap.get(senderProfile).remove(friendProfile);
     }
 
-    public void follow(Profile senderProfile, Profile friendProfile){
-        List<Profile> list = followingMap.getOrDefault(senderProfile, new ArrayList<>());
-        list.add(friendProfile);
-        followingMap.put(senderProfile,list);
+                        // el page                      nafsy
+    public void follow(FollowedEntity followedEntity, FollowedEntity followingEntity){
+        List<FollowedEntity> list = followersMap.getOrDefault(followedEntity, new ArrayList<>());
+        list.add(followingEntity);
+        followersMap.put(followedEntity,list);
 
-        List<Profile> list2 = followersMap.getOrDefault(senderProfile, new ArrayList<>());
-        list2.add(senderProfile);
-        followersMap.put(friendProfile, list2);
+        List<FollowedEntity> list2 = followingMap.getOrDefault(followingEntity, new ArrayList<>());
+        list2.add(followedEntity);
+        followingMap.put(followingEntity, list2);
     }
 
-    public void unfollow(Profile senderProfile, Profile friendProfile){
+    public void unfollow(FollowedEntity senderProfile, FollowedEntity friendProfile){
         followingMap.get(senderProfile).remove(friendProfile);
         followersMap.get(friendProfile).remove(senderProfile);
     }
 
-    public Map<Profile, List<Profile>> getFollowingMap() {
+    public Map<FollowedEntity, List<FollowedEntity>> getFollowingMap() {
         return followingMap;
     }
 
-    public List<Profile> getFollowingList(Profile profile){
-        return followingMap.get(profile);
+    public List<FollowedEntity> getFollowingList(FollowedEntity followedEntity){
+        return followingMap.get(followedEntity);
     }
 
-    public Map<Profile, List<Profile>> getFollowersMap() {
+    public Map<FollowedEntity, List<FollowedEntity>> getFollowersMap() {
         return followersMap;
     }
 
-    public List<Profile> getFollowersList(Profile profile){
-        return followersMap.get(profile);
+    public List<FollowedEntity> getFollowersList(FollowedEntity followedEntity){
+        return followersMap.get(followedEntity);
     }
 
     public List<Profile> getFriendsList(Profile profile){

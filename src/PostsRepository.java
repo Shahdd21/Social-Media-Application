@@ -2,34 +2,24 @@ import java.util.*;
 
 public class PostsRepository {
 
-    private final Map<Profile, List<Post>> postsByUser;
-    private final Map<Page, List<Post>> postsByPage;
+    private final Map<FollowedEntity, List<Post>> postsByUserAndPage;
     private final Map<String, Post> getPostById; // post id
     private final Map<Post, List<Comment>> postComments;
     private final Map<Post, Set<Profile>> postLikes;
 
     public PostsRepository(){
         postComments = new HashMap<>();
-        postsByUser = new HashMap<>();
+        postsByUserAndPage = new HashMap<>();
         postLikes = new HashMap<>();
         getPostById = new HashMap<>();
-        postsByPage = new HashMap<>();
     }
 
     public List<Post> getPostsList(Profile profile){
-        return postsByUser.get(profile);
+        return postsByUserAndPage.get(profile);
     }
 
-    public Map<Profile, List<Post>> getPostsByUser() {
-        return postsByUser;
-    }
-
-    public Map<Page, List<Post>> getPostsByPageMap(){
-        return postsByPage;
-    }
-
-    public List<Post> getPostsListByPage(Page page){
-        return postsByPage.get(page);
+    public Map<FollowedEntity, List<Post>> getPostsByUserAndPage() {
+        return postsByUserAndPage;
     }
 
     public Map<Post, List<Comment>> getPostComments() {
@@ -44,21 +34,14 @@ public class PostsRepository {
         return postLikes;
     }
 
-    public void addPost(Profile profile, Post post){
-        List<Post> list = postsByUser.getOrDefault(profile, new ArrayList<>());
+    public void addPost(FollowedEntity followedEntity, Post post){
+        List<Post> list = postsByUserAndPage.getOrDefault(followedEntity, new ArrayList<>());
         list.add(post);
-        postsByUser.put(profile,list);
+        postsByUserAndPage.put(followedEntity,list);
 
         getPostById.put(post.getPostId(), post);
     }
 
-    public void addPost(Page page, Post post){
-        List<Post> list = postsByPage.getOrDefault(page, new ArrayList<>());
-        list.add(post);
-        postsByPage.put(page,list);
-
-        getPostById.put(post.getPostId(), post);
-    }
     public int getLikesNum(Post post){
        return postLikes.containsKey(post) ? postLikes.get(post).size() : 0 ;
     }

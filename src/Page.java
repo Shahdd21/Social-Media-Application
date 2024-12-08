@@ -1,6 +1,6 @@
 import java.time.LocalDate;
 
-public class Page {
+public class Page implements FollowedEntity{
     private final String pageId;
     private String pageName;
     private final LocalDate creationDate;
@@ -50,5 +50,20 @@ public class Page {
 
     public Profile getCreatorProfile() {
         return creatorProfile;
+    }
+
+    @Override
+    public FollowedEntity getEntity() {
+        return this;
+    }
+
+    @Override
+    public String getFullName() {
+        return pageName;
+    }
+
+    @Override
+    public String getID() {
+        return pageId;
     }
 }
