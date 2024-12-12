@@ -11,11 +11,12 @@ public class Main {
     public static PostManager postManager = new PostManager(database);
     public static NotificationManager notificationManager = new NotificationManager(database);
     public static PageManager pageManager = new PageManager(database);
+    public static GroupManager groupManager = new GroupManager(database);
 
     public static void main(String[] args) {
 
         Member member = new Member("shawerma","Shahd", "Mahmoud",
-                "shahd@gmail.com", "0123456789","123", false);
+                "shahd@gmail.com", "0123456789","123");
         ProfileManager.createProfile(member);
         userManager.addMember("shawerma",member);
 
@@ -140,9 +141,10 @@ public class Main {
             System.out.println("\t\t\t6) View Friends");
             System.out.print("\t7) View Friend Requests");
             System.out.print("\t8) Manage Pages");
-            System.out.println("\t\t9) Notification");
-            System.out.print("\t10) Search");
-            System.out.println("\t\t\t\t11) Log out");
+            System.out.println("\t\t9) Discover Groups");
+            System.out.print("\t10) Notification");
+            System.out.print("\t\t11) Search");
+            System.out.println("\t\t\t12) Log out");
 
             System.out.println("Choose between 1-11: ");
             int ans = input.nextInt();
@@ -182,14 +184,18 @@ public class Main {
                     break;
 
                 case 9:
-                    openNotification(member);
+                    displayGroups(member);
                     break;
 
                 case 10:
+                    openNotification(member);
+                    break;
+
+                case 11:
                     search(member);
                     break;
 
-                case 11:  return;
+                case 12:  return;
             }
         }
     }
@@ -338,67 +344,6 @@ public class Main {
         }
     }
 
-//    public static void adminMenu(Member member){
-//        while(true) {
-//            System.out.printf("Hello, %s !\n", member.getFirstName());
-//
-//            System.out.println("\t\u2022 Profile");
-//            System.out.println("\t\u2022 Feed");
-//            System.out.println("\t\u2022 Create post");
-//            System.out.println("\t\u2022 Add Friends");
-//            System.out.println("\t\u2022 View Friends");
-//            System.out.println("\t\u2022 View Friend Requests");
-//            System.out.println("\t\u2022 Manage Reports");
-//            System.out.println("\t\u2022 Log out");
-//
-//            System.out.println("Choose between 1-8: ");
-//            int ans = input.nextInt();
-//            input.nextLine();
-//
-//            switch (ans) {
-//                case 1:
-//                    openProfile(member);
-//                    break;
-//
-//                case 2:
-//                    openFeed(member);
-//                    break;
-//
-//                case 3:
-//                    createPost(member);
-//                    break;
-//
-//                case 4:
-//                    explore(member);
-//                    break;
-//
-//                case 5:
-//                    viewFriends(member);
-//                    break;
-//
-//                case 6:
-//                    manageReports(member);
-//
-//                case 7:
-//                    viewFriendRequests(member);
-//
-//                case 8:  return;
-//            }
-//        }
-//    }
-
-//    public static void manageReports(Member admin){
-//
-//        while(true) {
-//            System.out.println("Reports: ");
-//            ReportRepository.displayReports(admin);
-//
-//            System.out.println("Enter the report ID you want to process: ");
-//            String reportId = input.nextLine();
-//
-//        }
-//    }
-
     public static void openFeed(Member member) {
 
         Profile memberProfile = member.getProfile();
@@ -413,11 +358,11 @@ public class Main {
                     postManager.displayPosts(friendProfile);
                 }
 
-                System.out.println("Interact with the post:\n1: Like 2: Comment 3:Share 4:Report 5:Nothing");
+                System.out.println("Interact with the post:\n1: Like 2: Comment 3:Share 4:Nothing");
                 int ans = input.nextInt();
                 input.nextLine();
 
-                if(ans != 5){
+                if(ans != 4){
                     String notificationMessage = null;
 
                     System.out.println("Enter the Post ID: ");
@@ -447,49 +392,6 @@ public class Main {
                     if(ans == 3){
                         postManager.addPost(member.getProfile(),post);
                         notificationMessage = memberProfile.getFullName()+" shared your post with ID: "+postId;
-                    }
-
-                    if(ans == 4){
-                        Report report = new Report();
-
-                        System.out.println("choose the reason of your report: ");
-                        System.out.println("1- Pornographic content");
-                        System.out.println("2- Fake Account");
-                        System.out.println("3- Harassment");
-                        System.out.println("4- Disturbing content");
-                        System.out.println("5- Scam");
-
-                        int reason = input.nextInt();
-                        input.nextLine();
-
-                        switch (reason){
-                            case 1:
-                                report.setReportCause(ReportCause.PORNOGRAPHIC_CONTENT);
-                                break;
-
-                            case 2:
-                                report.setReportCause(ReportCause.FAKE_ACCOUNT);
-                                break;
-
-                            case 3:
-                                report.setReportCause(ReportCause.HARASSMENT);
-                                break;
-
-                            case 4:
-                                report.setReportCause(ReportCause.DISTURBING_CONTENT);
-                                break;
-
-                            case 5:
-                                report.setReportCause(ReportCause.SCAM);
-                                break;
-                        }
-
-                        //report.setReportedEntity(post);
-                        report.setReportingProfile(member.getProfile());
-
-                        ReportRepository.addReport(report);
-
-                        System.out.println("Report is made successfully !");
                     }
 
                     notificationManager.sendNotification(memberProfile.getProfileId(), post.getCreatorId(),
@@ -556,6 +458,16 @@ public class Main {
         post.setContent(content);
 
         postManager.addPost(followedEntity, post);
+    }
+
+    public static void createPost(Group group, Profile profile){
+        Post post = new Post(profile);
+        System.out.println("What's on your mind? ");
+        String content = input.nextLine();
+
+        post.setContent(content);
+
+        postManager.addPost(group, post);
     }
 
     public static void openProfile(Member member){
@@ -944,5 +856,178 @@ public class Main {
         System.out.println("\t"+page.getBio());
         System.out.println("Category: "+page.getCategory());
         postManager.displayPosts(page);
+    }
+
+    public static void displayGroups(Member member){
+
+        while (true) {
+            System.out.println("1.View All Groups");
+            System.out.println("2.View My Groups");
+            System.out.println("3.Open a group");
+            System.out.println("4.Create a new group");
+            System.out.println("5.Return");
+
+            int ans = input.nextInt();
+            input.nextLine();
+
+            switch (ans) {
+                case 1:
+                    groupManager.displayGroups();
+                break;
+
+                case 2:
+                    groupManager.displayGroupsOf(member.getProfile());
+                break;
+
+                case 3:{
+                    System.out.println("Enter the ID of the group: ");
+                    String id = input.nextLine();
+
+                    if (!groupManager.findGroup(id)) System.out.println("No such a group with this ID.");
+
+                    else {
+                        Group group = groupManager.getGroup(id);
+                        viewGroup(group, member.getProfile());
+                    }
+                }
+
+                case 4: {
+                    System.out.println("Write the name of the group: ");
+                    String name = input.nextLine();
+
+                    groupManager.createGroup(member.getProfile(), name);
+
+                    System.out.println("The Group is Created !");
+                }
+                break;
+
+                case 5: return;
+            }
+        }
+    }
+
+    public static void viewGroup(Group group, Profile memberProfile){
+        if(group.getPrivacyOption() == PrivacyOption.PRIVATE){
+            System.out.println("About:");
+            System.out.println(group.getBio());
+            System.out.println("This group is private");
+            System.out.println("Joined Members: "+ groupManager.getJoinedMembers(group).size());
+
+            System.out.println("Join Group ? Y/A");
+
+            String choice = input.nextLine();
+
+            if(choice.equals("Y")){
+                groupManager.joinPrivateGroup(group,memberProfile);
+                System.out.println("Your request is sent and waiting for the admin to approve it!");
+            }
+        }
+        else{
+            openGroup(group,memberProfile);
+        }
+    }
+
+    public static void openGroup(Group group, Profile memberProfile){
+        System.out.println("------------"+group.getGroupName()+"-------------");
+        System.out.println("1.About");
+        System.out.println("2.View posts");
+        System.out.println("3.Create a post");
+        System.out.println("4.View members");
+        System.out.println("5.Return");
+
+        if(group.getCreatorAdminProfile() == memberProfile){
+            System.out.println("6.View requests");
+            System.out.println("7.Add members");
+            System.out.println("8.Settings");
+        }
+
+        if(!groupManager.findJoinedMember(group,memberProfile))
+            System.out.println("9.Join Group");
+
+        int ans = input.nextInt();
+
+        switch (ans){
+            case 1:{
+                System.out.println("About:");
+                System.out.println(group.getBio());
+                System.out.println(group.getPrivacyOption().toString());
+                System.out.println("Joined Members: "+ groupManager.getJoinedMembers(group).size());
+            }
+            break;
+
+            case 2:
+                postManager.displayPosts(group);
+                break;
+
+            case 3:
+                createPost(group,memberProfile);
+                break;
+
+            case 4:
+                groupManager.displayMembersOf(group);
+                break;
+
+            case 5:
+                return;
+
+            case 8:
+                groupSettings(group);
+                break;
+
+            case 9:{
+                groupManager.joinGroup(group, memberProfile);
+                System.out.println("You've joined the group ! Welcome !");
+            }
+        }
+    }
+
+    public static void groupSettings(Group group) {
+        while (true) {
+            System.out.println("1.Edit Name");
+            System.out.println("2.Edit Bio");
+            System.out.println("3.Edit Privacy option");
+            System.out.println("4.Return");
+
+            int ans = input.nextInt();
+            input.nextLine();
+
+            switch (ans) {
+                case 1: {
+                    System.out.println("Enter new name: ");
+                    String name = input.nextLine();
+
+                    group.setGroupName(name);
+                    System.out.println("Group name successfully changed!");
+                }
+                break;
+
+                case 2: {
+                    System.out.println("Enter new bio: ");
+                    String bio = input.nextLine();
+
+                    group.setBio(bio);
+                    System.out.println("Group Bio successfully changed!");
+                }
+
+                case 3: {
+                    System.out.println("Now: "+group.getPrivacyOption().toString());
+                    System.out.println("Change ? Y/A");
+
+                    String choice = input.nextLine();
+
+                    if(choice.equals("Y")){
+                        PrivacyOption privacyOption = group.getPrivacyOption() == PrivacyOption.PRIVATE ?
+                                        PrivacyOption.PUBLIC : PrivacyOption.PRIVATE;
+
+                        group.setPrivacyOption(privacyOption);
+
+                        System.out.println("Privacy option changed!");
+                    }
+                }
+
+                case 4:
+                    return;
+            }
+        }
     }
 }

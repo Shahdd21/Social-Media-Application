@@ -3,6 +3,7 @@ import java.util.*;
 public class PostsRepository {
 
     private final Map<FollowedEntity, List<Post>> postsByUserAndPage;
+    private final Map<Group, List<Post>> postsByGroups;
     private final Map<String, Post> getPostById; // post id
     private final Map<Post, List<Comment>> postComments;
     private final Map<Post, Set<Profile>> postLikes;
@@ -12,14 +13,23 @@ public class PostsRepository {
         postsByUserAndPage = new HashMap<>();
         postLikes = new HashMap<>();
         getPostById = new HashMap<>();
+        postsByGroups = new HashMap<>();
     }
 
-    public List<Post> getPostsList(Profile profile){
-        return postsByUserAndPage.get(profile);
+    public List<Post> getPostsList(FollowedEntity followedEntity){
+        return postsByUserAndPage.get(followedEntity);
+    }
+
+    public List<Post> getPostsList(Group group){
+        return postsByGroups.get(group);
     }
 
     public Map<FollowedEntity, List<Post>> getPostsByUserAndPage() {
         return postsByUserAndPage;
+    }
+
+    public Map<Group, List<Post>> getPostsByGroups(){
+        return postsByGroups;
     }
 
     public Map<Post, List<Comment>> getPostComments() {
@@ -40,6 +50,14 @@ public class PostsRepository {
         postsByUserAndPage.put(followedEntity,list);
 
         getPostById.put(post.getPostId(), post);
+    }
+
+    public void addPost(Group group, Post post){
+        List<Post> list = postsByGroups.getOrDefault(group, new ArrayList<>());
+        list.add(post);
+        postsByGroups.put(group,list);
+
+        getPostById.put(post.getPostId(),post);
     }
 
     public int getLikesNum(Post post){

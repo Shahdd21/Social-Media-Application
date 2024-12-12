@@ -9,6 +9,7 @@ public class Database {
     private final ChatRepository chatRepository;
     private final PostsRepository postsRepository;
     private final PagesRepository pagesRepository;
+    private final GroupRepository groupRepository;
 
     private Database(){
         chatRepository = new ChatRepository();
@@ -16,6 +17,7 @@ public class Database {
         userRepository = new UserRepository();
         notificationRepository = new NotificationRepository();
         pagesRepository = new PagesRepository();
+        groupRepository = new GroupRepository();
     }
 
     public static Database getInstance(){
@@ -48,5 +50,9 @@ public class Database {
 
     public UserRepository getUserRepository() {
         return userRepository;
+    }
+
+    public GroupRepository getGroupRepository() {
+        return groupRepository;
     }
 }

@@ -1,3 +1,5 @@
+import javafx.geometry.Pos;
+
 import java.util.List;
 import java.util.Map;
 
@@ -18,12 +20,32 @@ public class PostManager {
                 System.out.println("postId: " + post.getPostId());
                 System.out.println(post.getDate());
                 System.out.println(post.getContent());
-                System.out.println("Likes: " + postsRepository.getLikesNum(post));
+                System.out.println("Likes: " + getLikesNum(post));
                 System.out.println(".................................................");
                 displayComments(post);
                 System.out.println("-------------------------------------------------");
             }
         }
+        else System.out.println("No posts to show.");
+    }
+
+    public void displayPosts(Group group){
+
+        if(postsRepository.getPostsByGroups().containsKey(group) && !postsRepository.getPostsList(group).isEmpty()){
+            List<Post> postList = postsRepository.getPostsList(group);
+
+            for(Post post : postList){
+                System.out.println(post.getAuthorName()+" > "+group.getGroupName());
+                System.out.println("postId: " + post.getPostId());
+                System.out.println(post.getDate());
+                System.out.println(post.getContent());
+                System.out.println("Likes: " +getLikesNum(post));
+                System.out.println(".................................................");
+                displayComments(post);
+                System.out.println("-------------------------------------------------");
+            }
+        }
+
         else System.out.println("No posts to show.");
     }
 
@@ -76,5 +98,9 @@ public class PostManager {
 
     public void addPost(FollowedEntity followedEntity, Post post){
         postsRepository.addPost(followedEntity, post);
+    }
+
+    public void addPost(Group group, Post post){
+        postsRepository.addPost(group,post);
     }
 }
