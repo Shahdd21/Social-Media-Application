@@ -52,6 +52,10 @@ public class GroupManager {
         groupRepository.joinGroup(group, profile);
     }
 
+    public void removeFromPending(Group group, Profile profile){
+        groupRepository.removeFromPending(group,profile);
+    }
+
     public boolean findJoinedMember(Group group, Profile profile){
         return groupRepository.findJoinedMember(group,profile);
     }
@@ -66,5 +70,13 @@ public class GroupManager {
         }
 
         else System.out.println("No members to show");
+    }
+
+    public Map<Group,List<Profile>> getPendingMembersByGroup(){
+        return groupRepository.getPendingMembersByGroup();
+    }
+
+    public List<Profile> getPendingMembersList(Group group){
+        return groupRepository.getPendingMembers(group);
     }
 }

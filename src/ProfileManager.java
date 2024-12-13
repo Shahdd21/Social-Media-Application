@@ -3,29 +3,32 @@ import java.util.Map;
 
 public class ProfileManager {
 
-    private static final Map<String, Profile> ProfilesByUsername = new HashMap<>();
-    private static final Map<String, Profile> ProfilesById = new HashMap<>();
+    public ProfileRepository profileRepository;
 
-    public static void createProfile(Member member){
+    public ProfileManager(Database database){
+        profileRepository = database.getProfileRepository();
+    }
+
+    public void createProfile(Member member){
         Profile profile = new Profile(member);
         member.setProfile(profile);
-        ProfilesByUsername.put(member.getUserName(), profile);
-        ProfilesById.put(profile.getID(), profile);
+
+        profileRepository.addProfile(member.getUserName(), profile.getProfileId(), profile);
     }
 
-    public static Profile getProfileByUsername(String username){
-        return ProfilesByUsername.get(username);
+    public Profile getProfileByUsername(String username){
+        return profileRepository.getProfileByUsername(username);
     }
 
-    public static boolean findById(String id){
-        return ProfilesById.containsKey(id);
+    public boolean findById(String id){
+        return profileRepository.findById(id);
     }
 
-    public static boolean find(String username){
-        return ProfilesByUsername.containsKey(username);
+    public boolean find(String username){
+        return profileRepository.find(username);
     }
 
-    public static Profile getProfileById(String id){
-        return ProfilesById.get(id);
+    public Profile getProfileById(String id){
+        return profileRepository.getProfileById(id);
     }
 }

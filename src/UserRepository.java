@@ -9,6 +9,7 @@ public class UserRepository {
     private final Map<Profile, List<Profile>> pendingFriendsMap;
     private final Map<FollowedEntity, List<FollowedEntity>> followingMap;
     private final Map<FollowedEntity, List<FollowedEntity>> followersMap;
+    private final Map<Profile, List<Group>> joinedGroups ;
 
     public UserRepository() {
         this.membersRepo = new HashMap<>();
@@ -16,6 +17,7 @@ public class UserRepository {
         this.pendingFriendsMap = new HashMap<>();
         this.followersMap = new HashMap<>();
         this.followingMap = new HashMap<>();
+        joinedGroups = new HashMap<>();
     }
 
     public void addMember(String username, Member member){
@@ -31,6 +33,22 @@ public class UserRepository {
 
     public void deleteFriend(Profile senderProfile, Profile friendProfile){
         friendsMap.get(senderProfile).remove(friendProfile);
+    }
+
+    public void acceptPending(Profile memberProfile, Profile friendProfile){
+        List<Profile> list = friendsMap.getOrDefault(memberProfile,new ArrayList<>());
+        list.add(friendProfile);
+        friendsMap.put(memberProfile,list);
+
+        pendingFriendsMap.get(memberProfile).remove(friendProfile);
+
+        List<Profile> list2 = friendsMap.getOrDefault(friendProfile, new ArrayList<>());
+        list2.add(memberProfile);
+        friendsMap.put(friendProfile,list2);
+    }
+
+    public void deletePending(Profile memberProfile, Profile friendProfile){
+        pendingFriendsMap.get(memberProfile).remove(friendProfile);
     }
 
                         // el page                      nafsy
@@ -49,12 +67,27 @@ public class UserRepository {
         followersMap.get(friendProfile).remove(senderProfile);
     }
 
+    public void joinGroup(Profile profile, Group group){
+        List<Group> list = joinedGroups.getOrDefault(profile, new ArrayList<>());
+        list.add(group);
+
+        joinedGroups.put(profile,list);
+    }
+
     public Map<FollowedEntity, List<FollowedEntity>> getFollowingMap() {
         return followingMap;
     }
 
     public List<FollowedEntity> getFollowingList(FollowedEntity followedEntity){
         return followingMap.get(followedEntity);
+    }
+
+    public Map<Profile, List<Group>> getJoinedGroups(){
+        return joinedGroups;
+    }
+
+    public List<Group> getJoinedGroups(Profile profile){
+        return joinedGroups.get(profile);
     }
 
     public Map<FollowedEntity, List<FollowedEntity>> getFollowersMap() {

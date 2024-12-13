@@ -14,6 +14,13 @@ public class Post{
         this.authorName = followedEntity.getFullName();
     }
 
+    public Post(Profile profile, Group group){
+        date = LocalDate.now();
+        postId = System.currentTimeMillis()%1000 +"G"+ group.getGroupId();
+        creatorId = profile.getProfileId();
+        authorName = profile.getFullName();
+    }
+
     public Post getPost() {
         return this;
     }

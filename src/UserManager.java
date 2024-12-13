@@ -20,6 +20,14 @@ public class UserManager {
         userRepository.deleteFriend(senderProfile, friendProfile);
     }
 
+    public void acceptPending(Profile memberProfile, Profile friendProfile){
+        userRepository.acceptPending(memberProfile,friendProfile);
+    }
+
+    public void deletePending(Profile memberProfile, Profile friendProfile){
+        userRepository.deletePending(memberProfile, friendProfile);
+    }
+
     public void follow(FollowedEntity followedEntity, FollowedEntity followingEntity){
         userRepository.follow(followedEntity, followingEntity);
     }
@@ -82,6 +90,18 @@ public class UserManager {
 
     public List<FollowedEntity> getFollowingList(FollowedEntity followedEntity){
         return userRepository.getFollowingList(followedEntity);
+    }
+
+    public List<Group> getJoinedGroups(Profile profile){
+        return userRepository.getJoinedGroups(profile);
+    }
+
+    public Map<Profile,List<Group>> getJoinedGroups(){
+        return userRepository.getJoinedGroups();
+    }
+
+    public void joinGroup(Profile profile, Group group){
+        userRepository.joinGroup(profile,group);
     }
 
 }

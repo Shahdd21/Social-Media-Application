@@ -12,12 +12,13 @@ public class Main {
     public static NotificationManager notificationManager = new NotificationManager(database);
     public static PageManager pageManager = new PageManager(database);
     public static GroupManager groupManager = new GroupManager(database);
+    public static ProfileManager profileManager = new ProfileManager(database);
 
     public static void main(String[] args) {
 
         Member member = new Member("shawerma","Shahd", "Mahmoud",
                 "shahd@gmail.com", "0123456789","123");
-        ProfileManager.createProfile(member);
+        profileManager.createProfile(member);
         userManager.addMember("shawerma",member);
 
         while(true) {
@@ -71,7 +72,7 @@ public class Main {
 
         member.setPassword(password);
 
-        ProfileManager.createProfile(member);
+        profileManager.createProfile(member);
         userManager.addMember(member.getUserName(), member);
         System.out.println("You joined the Family !");
 
@@ -90,8 +91,6 @@ public class Main {
             Member member = userManager.getMember(userName);
 
             if(member.getPassword().equals(password)) {
-                //if(member.isAdmin()) adminMenu(member);
-
                  mainMenu(member);
             }
 
@@ -184,7 +183,7 @@ public class Main {
                     break;
 
                 case 9:
-                    displayGroups(member);
+                    discoverGroups(member);
                     break;
 
                 case 10:
@@ -251,14 +250,14 @@ public class Main {
                 if (choice == 1) {
                     System.out.println("Write your message: ");
                     String content = input.nextLine();
-                    Message message = new Message(content, ProfileManager.getProfileByUsername(friendUsername),
-                            ProfileManager.getProfileByUsername(memberUsername));
+                    Message message = new Message(content, profileManager.getProfileByUsername(friendUsername),
+                            profileManager.getProfileByUsername(memberUsername));
 
-                    chatManager.sendDirectMessage(message, ProfileManager.getProfileByUsername(memberUsername),
-                            ProfileManager.getProfileByUsername(friendUsername));
+                    chatManager.sendDirectMessage(message, profileManager.getProfileByUsername(memberUsername),
+                            profileManager.getProfileByUsername(friendUsername));
 
                     notificationManager.sendNotification(member.getProfile().getProfileId(),
-                            ProfileManager.getProfileByUsername(friendUsername).getProfileId(),
+                            profileManager.getProfileByUsername(friendUsername).getProfileId(),
                             EventType.NEW_MESSAGE, member.getFirstName()+" "+
                                     member.getLastName()+" sent you a message");
                 } else {
@@ -277,18 +276,18 @@ public class Main {
 
             if(userManager.isFoundMember(friendUsername)){
                 if(userManager.getFriendsList(member.getProfile())
-                        .contains(ProfileManager.getProfileByUsername(friendUsername))){
+                        .contains(profileManager.getProfileByUsername(friendUsername))){
                     System.out.println("Write your first message: ");
                     String content = input.nextLine();
 
-                    Message message = new Message(content, ProfileManager.getProfileByUsername(friendUsername),
+                    Message message = new Message(content, profileManager.getProfileByUsername(friendUsername),
                             member.getProfile());
 
-                    chatManager.sendDirectMessage(message, ProfileManager.getProfileByUsername(memberUsername),
-                            ProfileManager.getProfileByUsername(friendUsername));
+                    chatManager.sendDirectMessage(message, profileManager.getProfileByUsername(memberUsername),
+                            profileManager.getProfileByUsername(friendUsername));
 
                     notificationManager.sendNotification(member.getProfile().getProfileId(),
-                            ProfileManager.getProfileByUsername(friendUsername).getProfileId(),
+                            profileManager.getProfileByUsername(friendUsername).getProfileId(),
                             EventType.NEW_MESSAGE, member.getFirstName()+" "+
                                     member.getLastName()+" sent you a message");
                 }
@@ -320,15 +319,7 @@ public class Main {
                 input.nextLine();
 
                 if (ans == 1) {
-                    List<Profile> memberList = userManager.getFriendsMap().getOrDefault(memberProfile, new ArrayList<>());
-                    memberList.add(friendProfile);
-                    userManager.getFriendsMap().put(memberProfile, memberList);
-
-                    userManager.getPendingFriendsList(memberProfile).remove(friendProfile);
-
-                    List<Profile> friendList = userManager.getFriendsMap().getOrDefault(friendProfile, new ArrayList<>());
-                    friendList.add(memberProfile);
-                    userManager.getFriendsMap().put(friendProfile, friendList);
+                    userManager.acceptPending(memberProfile, friendProfile);
 
                     NotificationManager notificationManager = new NotificationManager(database);
 
@@ -336,9 +327,14 @@ public class Main {
                             EventType.FRIEND_REQUEST, member.getFirstName() + " " + member.getLastName()
                                     + " accepted your friend request. You're friends now !");
 
-                } else if (ans == 2) {
-                    userManager.getPendingFriendsList(memberProfile).remove(friendProfile);
-                } else if (ans == 3) continue;
+                }
+
+                else if (ans == 2) {
+                    userManager.deletePending(memberProfile,friendProfile);
+                }
+
+                else if (ans == 3) continue;
+
                 else System.out.println("Incorrect input.");
             }
         }
@@ -351,8 +347,8 @@ public class Main {
             System.out.println("Here is Feed !");
             System.out.println();
 
-            if (userManager.getFriendsMap().containsKey(member.getProfile()) && !userManager.getFriendsList(member.getProfile()).isEmpty()) {
-                List<Profile> friendProfiles = userManager.getFriendsList(member.getProfile());
+            if (userManager.getFriendsMap().containsKey(member.getProfile()) && !userManager.getFriendsList(memberProfile).isEmpty()) {
+                List<Profile> friendProfiles = userManager.getFriendsList(memberProfile);
 
                 for(Profile friendProfile : friendProfiles){
                     postManager.displayPosts(friendProfile);
@@ -399,9 +395,9 @@ public class Main {
                 }
             }
 
-            if(userManager.getFollowingMap().containsKey(member.getProfile()) && !userManager.getFollowingList(member.getProfile()).isEmpty()){
+            if(userManager.getFollowingMap().containsKey(member.getProfile()) && !userManager.getFollowingList(memberProfile).isEmpty()){
 
-                List<FollowedEntity> followingList = userManager.getFollowingList(member.getProfile());
+                List<FollowedEntity> followingList = userManager.getFollowingList(memberProfile);
 
                 for(FollowedEntity followedEntity : followingList){
                     postManager.displayPosts(followedEntity);
@@ -434,10 +430,66 @@ public class Main {
                 }
             }
 
+            if(userManager.getJoinedGroups().containsKey(memberProfile) && !userManager.getJoinedGroups(memberProfile).isEmpty()){
+                List<Group> groups = userManager.getJoinedGroups(memberProfile);
+
+                for(Group group: groups){
+                    postManager.displayPosts(group);
+                }
+
+                System.out.println("Interact with the post:\n1: Like 2: Comment 3:Share 4:Nothing");
+                int ans = input.nextInt();
+                input.nextLine();
+
+                if(ans != 4){
+                    String notificationMessage = null;
+
+                    System.out.println("Enter the Post ID: ");
+                    String postId = input.nextLine();
+
+                    Post post = postManager.getPostById(postId);
+
+                    int groupIdIdx = postId.indexOf("G")+1;
+                    String groupId = postId.substring(groupIdIdx);
+                    Group group = groupManager.getGroup(groupId);
+
+                    if(ans == 1) {
+                        postManager.addLike(post, memberProfile);
+                        notificationMessage = memberProfile.getFullName()+" liked your post with ID: "+postId
+                        +" in group: "+ group.getGroupName();
+                    }
+
+                    if(ans == 2) {
+                        Comment comment = new Comment();
+
+                        System.out.println("Enter your comment: ");
+                        String commentContent = input.nextLine();
+
+                        comment.setContent(commentContent);
+                        comment.setPost(post);
+                        comment.setAuthorProfile(member.getProfile());
+
+                        postManager.addComment(post,comment);
+                        notificationMessage = memberProfile.getFullName()+" commented on your post with ID: "+postId
+                                +" in group: "+ group.getGroupName();
+                    }
+
+                    if(ans == 3){
+                        postManager.addPost(member.getProfile(),post);
+                        notificationMessage = memberProfile.getFullName()+" shared your post with ID: "+postId
+                                +" in group: "+ group.getGroupName();
+                    }
+
+                    notificationManager.sendNotification(memberProfile.getProfileId(), post.getCreatorId(),
+                            EventType.POST_INTERACTION, notificationMessage);
+                }
+
+            }
+
             else {
-                if(postManager.getPostsMap().containsKey(member.getProfile())
-                        &&!postManager.getPostsList(member.getProfile()).isEmpty()) {
-                    postManager.displayPosts(member.getProfile());
+                if(postManager.getPostsMap().containsKey(memberProfile)
+                        &&!postManager.getPostsList(memberProfile).isEmpty()) {
+                    postManager.displayPosts(memberProfile);
                 }
                 else System.out.println("No posts to display.");
             }
@@ -461,7 +513,7 @@ public class Main {
     }
 
     public static void createPost(Group group, Profile profile){
-        Post post = new Post(profile);
+        Post post = new Post(profile,group);
         System.out.println("What's on your mind? ");
         String content = input.nextLine();
 
@@ -657,7 +709,7 @@ public class Main {
         if(!userManager.isFoundMember(friendUsername)) System.out.println("The username doesn't exist");
 
         else {
-            Profile friendProfile = ProfileManager.getProfileByUsername(friendUsername);
+            Profile friendProfile = profileManager.getProfileByUsername(friendUsername);
             NotificationManager notificationManager = new NotificationManager(database);
 
             if (ans == 1) {
@@ -858,7 +910,7 @@ public class Main {
         postManager.displayPosts(page);
     }
 
-    public static void displayGroups(Member member){
+    public static void discoverGroups(Member member){
 
         while (true) {
             System.out.println("1.View All Groups");
@@ -890,6 +942,7 @@ public class Main {
                         viewGroup(group, member.getProfile());
                     }
                 }
+                break;
 
                 case 4: {
                     System.out.println("Write the name of the group: ");
@@ -907,76 +960,105 @@ public class Main {
     }
 
     public static void viewGroup(Group group, Profile memberProfile){
-        if(group.getPrivacyOption() == PrivacyOption.PRIVATE){
-            System.out.println("About:");
-            System.out.println(group.getBio());
-            System.out.println("This group is private");
-            System.out.println("Joined Members: "+ groupManager.getJoinedMembers(group).size());
 
-            System.out.println("Join Group ? Y/A");
+        while (true) {
+            if (group.getPrivacyOption() == PrivacyOption.PRIVATE) {
+                System.out.println("About:");
+                System.out.println(group.getBio());
+                System.out.println("This group is private");
+                System.out.println("Joined Members: " + groupManager.getJoinedMembers(group).size());
 
-            String choice = input.nextLine();
+                System.out.println("Join Group ? Y/N");
 
-            if(choice.equals("Y")){
-                groupManager.joinPrivateGroup(group,memberProfile);
-                System.out.println("Your request is sent and waiting for the admin to approve it!");
+                String choice = input.nextLine();
+
+                if (choice.equals("Y")) {
+                    groupManager.joinPrivateGroup(group, memberProfile);
+                    System.out.println("Your request is sent and waiting for the admin to approve it!");
+                    return;
+                }
+
+                else return;
+
             }
-        }
-        else{
-            openGroup(group,memberProfile);
+
+            else {
+                openGroup(group, memberProfile);
+                return;
+            }
         }
     }
 
     public static void openGroup(Group group, Profile memberProfile){
-        System.out.println("------------"+group.getGroupName()+"-------------");
-        System.out.println("1.About");
-        System.out.println("2.View posts");
-        System.out.println("3.Create a post");
-        System.out.println("4.View members");
-        System.out.println("5.Return");
 
-        if(group.getCreatorAdminProfile() == memberProfile){
-            System.out.println("6.View requests");
-            System.out.println("7.Add members");
-            System.out.println("8.Settings");
-        }
+        while(true) {
+            System.out.println("----------------" + group.getGroupName() + "------------------");
+            System.out.println("1.About");
+            System.out.println("2.View posts");
+            System.out.println("3.Create a post");
+            System.out.println("4.View members");
+            System.out.println("5.Return");
 
-        if(!groupManager.findJoinedMember(group,memberProfile))
-            System.out.println("9.Join Group");
-
-        int ans = input.nextInt();
-
-        switch (ans){
-            case 1:{
-                System.out.println("About:");
-                System.out.println(group.getBio());
-                System.out.println(group.getPrivacyOption().toString());
-                System.out.println("Joined Members: "+ groupManager.getJoinedMembers(group).size());
+            if (group.getCreatorAdminProfile() == memberProfile) {
+                System.out.println("6.View requests");
+                System.out.println("7.Add members");
+                System.out.println("8.Settings");
             }
-            break;
 
-            case 2:
-                postManager.displayPosts(group);
+            if (!groupManager.findJoinedMember(group, memberProfile))
+                System.out.println("9.Join Group");
+
+            int ans = input.nextInt();
+            input.nextLine();
+
+            switch (ans) {
+                case 1: {
+                    System.out.println("About:");
+                    System.out.println(group.getBio());
+                    System.out.println(group.getPrivacyOption().toString());
+                    System.out.println("Joined Members: " + groupManager.getJoinedMembers(group).size());
+                }
                 break;
 
-            case 3:
-                createPost(group,memberProfile);
+                case 2:
+                    postManager.displayPosts(group);
+                    break;
+
+                case 3:
+                    createPost(group, memberProfile);
+                    break;
+
+                case 4:
+                    groupManager.displayMembersOf(group);
+                    break;
+
+                case 5:
+                    return;
+
+                case 6:
+                    reviewRequests(group, memberProfile);
                 break;
 
-            case 4:
-                groupManager.displayMembersOf(group);
+                case 7:{
+                    System.out.println("Enter username of the profile you want to add: ");
+                    String username = input.nextLine();
+
+                    Profile profile = profileManager.getProfileByUsername(username);
+
+                    groupManager.joinGroup(group,profile);
+                }
+                   break;
+
+                case 8:
+                    groupSettings(group);
+                    break;
+
+                case 9: {
+                    groupManager.joinGroup(group, memberProfile);
+                    userManager.joinGroup(memberProfile,group);
+                    System.out.println("You've joined the group ! Welcome !");
+                }
                 break;
-
-            case 5:
-                return;
-
-            case 8:
-                groupSettings(group);
-                break;
-
-            case 9:{
-                groupManager.joinGroup(group, memberProfile);
-                System.out.println("You've joined the group ! Welcome !");
             }
         }
     }
@@ -1008,10 +1090,11 @@ public class Main {
                     group.setBio(bio);
                     System.out.println("Group Bio successfully changed!");
                 }
+                break;
 
                 case 3: {
                     System.out.println("Now: "+group.getPrivacyOption().toString());
-                    System.out.println("Change ? Y/A");
+                    System.out.println("Change ? Y/N");
 
                     String choice = input.nextLine();
 
@@ -1024,10 +1107,42 @@ public class Main {
                         System.out.println("Privacy option changed!");
                     }
                 }
+                break;
 
                 case 4:
                     return;
             }
         }
     }
+
+    public static void reviewRequests(Group group, Profile memberProfile){
+
+        if(groupManager.getPendingMembersByGroup().containsKey(group) && !groupManager.getPendingMembersList(group).isEmpty()){
+
+            List<Profile> pendingMembers = groupManager.getPendingMembersList(group);
+
+            for(Profile profile : pendingMembers){
+                System.out.printf("%s (%s)", profile.getEntity(), profile.getUsername());
+
+                System.out.println("1: Accept 2:Delete 3:Nothing");
+                int ans = input.nextInt();
+                input.nextLine();
+
+                if(ans == 1){
+                    groupManager.joinGroup(group, profile);
+                    groupManager.removeFromPending(group,profile);
+
+                    notificationManager.sendNotification(memberProfile.getProfileId(), profile.getProfileId(),
+                            EventType.ACCEPTED_REQUEST,
+                            "Your request has been approved by admins! You've joined "+ group.getGroupName());
+                }
+
+                else if(ans == 2) groupManager.removeFromPending(group,profile);
+            }
+
+        }
+
+        else System.out.println("No requests to show.");
+    }
+
 }

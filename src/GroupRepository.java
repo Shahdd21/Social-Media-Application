@@ -48,6 +48,10 @@ public class GroupRepository {
         pendingMembersByGroup.put(group,list);
     }
 
+    public void removeFromPending(Group group, Profile profile){
+        pendingMembersByGroup.get(group).remove(profile);
+    }
+
     public void joinGroup(Group group, Profile profile){
         List<Profile> list = joinedMembersByGroup.getOrDefault(group, new ArrayList<>());
         list.add(profile);
