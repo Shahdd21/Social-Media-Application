@@ -89,4 +89,8 @@ public class GroupRepository {
     public List<Profile> getPendingMembers(Group group){
         return pendingMembersByGroup.get(group);
     }
+
+    public void exitGroup(Group group, Profile member){
+        joinedMembersByGroup.get(group).remove(member);
+    }
 }

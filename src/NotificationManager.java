@@ -20,9 +20,11 @@ public class NotificationManager {
        Map<String, List<Notification>> notifications = notificationRepository.getNotifications();
 
         if(notifications.containsKey(profileId) && !notifications.get(profileId).isEmpty()) {
-            for (Notification notification : notifications.get(profileId)) {
-                System.out.println(notification.getNotificationMessage());
-                System.out.println(notification.getTimestamp());
+
+            List<Notification> list = notifications.get(profileId);
+            for (int i = list.size()-1 ; i >= 0 ; --i ) {
+                System.out.println(list.get(i).getNotificationMessage());
+                System.out.println(list.get(i).getTimestamp());
                 System.out.println("________________________________________________");
             }
         }

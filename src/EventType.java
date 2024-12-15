@@ -3,5 +3,6 @@ public enum EventType {
     FRIEND_REQUEST,
     FOLLOW,
     NEW_MESSAGE,
-    ACCEPTED_REQUEST
+    ACCEPTED_REQUEST,
+    JOIN_GROUP
 }

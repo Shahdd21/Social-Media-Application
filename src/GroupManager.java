@@ -19,6 +19,8 @@ public class GroupManager {
 
         if(!groupMap.isEmpty())
             groupMap.forEach((k,v) -> System.out.printf("%s (ID: %s)\n", v.getGroupName(), v.getGroupId()));
+
+        else System.out.println("No groups to show.");
     }
 
     public void displayGroupsOf(Profile profile){
@@ -30,9 +32,11 @@ public class GroupManager {
                 System.out.printf("%s (ID: %s)\n", group.getGroupName(),group.getGroupId());
             }
         }
+
+        else System.out.println("No groups to show.");
     }
 
-    public Group getGroup(String groupId){
+    public Group getGroupById(String groupId){
         return groupRepository.getGroup(groupId);
     }
 
@@ -78,5 +82,13 @@ public class GroupManager {
 
     public List<Profile> getPendingMembersList(Group group){
         return groupRepository.getPendingMembers(group);
+    }
+
+    public Map<String,Group> getGroupsMap(){
+        return groupRepository.getGroupsMap();
+    }
+
+    public void exitGroup(Group group, Profile member){
+        groupRepository.exitGroup(group,member);
     }
 }

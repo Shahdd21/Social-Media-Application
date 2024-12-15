@@ -1,12 +1,9 @@
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class UserRepository {
     private final Map<String, Member> membersRepo;
     private final Map<Profile, List<Profile>> friendsMap;
-    private final Map<Profile, List<Profile>> pendingFriendsMap;
+    private final Map<Profile, Set<Profile>> pendingFriendsMap;
     private final Map<FollowedEntity, List<FollowedEntity>> followingMap;
     private final Map<FollowedEntity, List<FollowedEntity>> followersMap;
     private final Map<Profile, List<Group>> joinedGroups ;
@@ -25,10 +22,9 @@ public class UserRepository {
     }
 
     public void addFriend(Profile friendProfile, Profile senderProfile){
-        List<Profile> list = pendingFriendsMap.getOrDefault(friendProfile, new ArrayList<>());
-        if(!list.contains(senderProfile))
-           list.add(senderProfile);
-        pendingFriendsMap.put(friendProfile,list);
+        Set<Profile> set = pendingFriendsMap.getOrDefault(friendProfile, new HashSet<>());
+        set.add(senderProfile);
+        pendingFriendsMap.put(friendProfile,set);
     }
 
     public void deleteFriend(Profile senderProfile, Profile friendProfile){
@@ -74,6 +70,10 @@ public class UserRepository {
         joinedGroups.put(profile,list);
     }
 
+    public void exitGroup(Profile profile, Group group){
+        joinedGroups.get(profile).remove(group);
+    }
+
     public Map<FollowedEntity, List<FollowedEntity>> getFollowingMap() {
         return followingMap;
     }
@@ -102,7 +102,7 @@ public class UserRepository {
         return friendsMap.get(profile);
     }
 
-    public List<Profile> getPendingFriendsList(Profile profile) {
+    public Set<Profile> getPendingFriendsList(Profile profile) {
         return pendingFriendsMap.get(profile);
     }
 
@@ -118,7 +118,7 @@ public class UserRepository {
         return friendsMap;
     }
 
-    public Map<Profile, List<Profile>> getPendingFriendsMap() {
+    public Map<Profile, Set<Profile>> getPendingFriendsMap() {
         return pendingFriendsMap;
     }
 

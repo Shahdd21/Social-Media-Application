@@ -22,10 +22,6 @@ public class PageManager {
         pagesRepository.getPagesById().put(page.getPageId(), page);
     }
 
-    public void addPostToPage(){
-
-    }
-
     public List<Page> getPagesList(Profile profile){
         return pagesRepository.getPagesByProfile(profile);
     }

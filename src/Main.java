@@ -1,7 +1,4 @@
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
 public class Main {
     public static Scanner input = new Scanner(System.in);
@@ -137,7 +134,7 @@ public class Main {
             System.out.println("\t\t\t\t3) Inbox");
             System.out.print("\t4) Create post");
             System.out.print("\t\t\t5) Explore");
-            System.out.println("\t\t\t6) View Friends");
+            System.out.println("\t\t\t6) My Network");
             System.out.print("\t7) View Friend Requests");
             System.out.print("\t8) Manage Pages");
             System.out.println("\t\t9) Discover Groups");
@@ -171,7 +168,7 @@ public class Main {
                     break;
 
                 case 6:
-                    viewFriends(member);
+                    myNetwork(member);
                     break;
 
                 case 7:
@@ -306,10 +303,9 @@ public class Main {
             System.out.println("No friend requests to show.");
 
         else{
-            List<Profile> pendingList = userManager.getPendingFriendsList(memberProfile);
+            Set<Profile> pendingList = userManager.getPendingFriendsList(memberProfile);
 
-        for (int i = 0; i < pendingList.size(); ++i) {
-                Profile friendProfile = pendingList.get(i);
+        for (Profile friendProfile : pendingList) {
 
                 System.out.printf("%s %s (%s)\n", friendProfile.getFirstName(), friendProfile.getLastName(),
                         friendProfile.getUsername());
@@ -451,7 +447,7 @@ public class Main {
 
                     int groupIdIdx = postId.indexOf("G")+1;
                     String groupId = postId.substring(groupIdIdx);
-                    Group group = groupManager.getGroup(groupId);
+                    Group group = groupManager.getGroupById(groupId);
 
                     if(ans == 1) {
                         postManager.addLike(post, memberProfile);
@@ -565,12 +561,12 @@ public class Main {
             System.out.println("7-Edit Country");
             System.out.println("8-Edit Birth Date");
             System.out.println("9-Edit Interested in");
-            System.out.println("Choose from 1-9 to edit and -1 to cancel");
+            System.out.println("Choose from 1-9 to edit and 0 to return");
 
             int ans = input.nextInt();
             input.nextLine();
 
-            if(ans == -1) break;
+            if(ans == 0) break;
 
             switch (ans){
                 case 1:{
@@ -661,6 +657,17 @@ public class Main {
         if(pagesMap != null){
             System.out.println("**Pages**");
             for(Map.Entry<String, Page> entry : pagesMap.entrySet()){
+                System.out.println(entry.getKey());
+            }
+        }
+
+        //groups exploring
+
+        Map<String,Group> groupMap = groupManager.getGroupsMap();
+
+        if(groupMap != null){
+            System.out.println("**Groups**");
+            for(Map.Entry<String,Group> entry : groupMap.entrySet()){
                 System.out.println(entry.getKey());
             }
         }
@@ -773,35 +780,82 @@ public class Main {
         else return;
     }
 
-    public static void viewFriends(Member member){
-        Profile profile = member.getProfile();
+    public static void myNetwork(Member member){
 
-        System.out.println("Friends: ");
-        if(userManager.getFriendsMap().containsKey(profile) && !userManager.getFriendsList(profile).isEmpty()) {
-            for (Profile friend : userManager.getFriendsList(profile)) {
-                System.out.printf("%s %s (%s)\n", friend.getFirstName(),
-                        friend.getLastName(), friend.getUsername());
+        while(true) {
+            Profile profile = member.getProfile();
+
+            System.out.println("Friends: ");
+            if (userManager.getFriendsMap().containsKey(profile) && !userManager.getFriendsList(profile).isEmpty()) {
+                for (Profile friend : userManager.getFriendsList(profile)) {
+                    System.out.printf("%s (%s)\n", friend.getFullName(), friend.getID());
+                }
+            } else System.out.println("No friends to show.");
+
+            System.out.println("Followers: ");
+            if (userManager.getFollowersMap().containsKey(profile) && !userManager.getFollowersList(profile).isEmpty()) {
+                for (FollowedEntity follower : userManager.getFollowersList(profile)) {
+                    System.out.printf("%s (%s)\n", follower.getFullName(), follower.getID());
+                }
+            } else System.out.println("No followers to show.");
+
+            System.out.println("Following: ");
+            if (userManager.getFollowingMap().containsKey(profile) && !userManager.getFollowingList(profile).isEmpty()) {
+                for (FollowedEntity followed : userManager.getFollowingList(profile)) {
+                    System.out.printf("%s (%s)\n", followed.getFullName(), followed.getID());
+                }
+            } else System.out.println("You don't follow anyone.");
+
+            System.out.println("Joined Groups: ");
+            if (userManager.getJoinedGroups().containsKey(profile) && !userManager.getJoinedGroups(profile).isEmpty()) {
+                for (Group group : userManager.getJoinedGroups(profile)) {
+                    System.out.printf("%s (%s)", group.getGroupName(), group.getGroupId());
+                }
+            } else System.out.println("No groups joined.");
+
+            System.out.println("1.Remove Friend 2.Unfollow People/Page 3.Exit Group 4.Nothing");
+
+            int ans = input.nextInt(); input.nextLine();
+
+
+            if(ans == 4) return;
+
+            else{
+                if(ans == 1){
+                    System.out.println("Write the ID of the friend you want to remove: ");
+                    String id = input.nextLine();
+
+                    Profile friendProfile = profileManager.getProfileById(id);
+                    userManager.deleteFriend(profile,friendProfile);
+
+                    System.out.println(friendProfile.getFullName()+" is removed from your network!");
+                }
+
+                else if(ans == 2){
+                    System.out.println("Write the ID of the friend/page you want to unfollow: ");
+                    String id = input.nextLine();
+
+                    FollowedEntity followedEntity = profileManager.getProfileById(id) != null ?
+                            profileManager.getProfileById(id) : pageManager.getPageById(id);
+
+                    userManager.unfollow(profile, followedEntity);
+
+                    System.out.println(followedEntity.getFullName()+" is removed from your following list!");
+                }
+
+                else{
+                    System.out.println("Write the ID of the group you want to exit: ");
+                    String id = input.nextLine();
+
+                    Group group = groupManager.getGroupById(id);
+
+                    userManager.exitGroup(profile,group);
+                    groupManager.exitGroup(group,profile);
+
+                    System.out.println("You left group: "+ group.getGroupName()+"!");
+                }
             }
         }
-        else System.out.println("No friends to show.");
-
-        System.out.println("Followers: ");
-        if(userManager.getFollowersMap().containsKey(profile) && !userManager.getFollowersList(profile).isEmpty()){
-            for(FollowedEntity follower : userManager.getFollowersList(profile)){
-                System.out.printf("%s\n", follower.getFullName());
-            }
-        }
-
-        else System.out.println("No followers to show.");
-
-        System.out.println("Following: ");
-        if(userManager.getFollowingMap().containsKey(profile) && !userManager.getFollowingList(profile).isEmpty()){
-            for(FollowedEntity followed : userManager.getFollowingList(profile)){
-                System.out.printf("%s\n", followed.getFullName());
-            }
-        }
-
-        else System.out.println("You don't follow anyone.");
     }
 
     public static void openNotification(Member member) {
@@ -938,7 +992,7 @@ public class Main {
                     if (!groupManager.findGroup(id)) System.out.println("No such a group with this ID.");
 
                     else {
-                        Group group = groupManager.getGroup(id);
+                        Group group = groupManager.getGroupById(id);
                         viewGroup(group, member.getProfile());
                     }
                 }
@@ -1046,6 +1100,14 @@ public class Main {
                     Profile profile = profileManager.getProfileByUsername(username);
 
                     groupManager.joinGroup(group,profile);
+                    userManager.joinGroup(profile,group);
+
+                    notificationManager.sendNotification(group.getCreatorAdminProfile().getProfileId(),
+                            profile.getProfileId(), EventType.JOIN_GROUP,
+                            group.getCreatorAdminProfile().getFullName() +" added you to group: "
+                    + group.getGroupName());
+
+                    System.out.println(profile.getFullName()+" is added successfully !");
                 }
                    break;
 

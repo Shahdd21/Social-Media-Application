@@ -1,5 +1,6 @@
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class UserManager {
     private final UserRepository userRepository;
@@ -52,7 +53,7 @@ public class UserManager {
         return userRepository.getFriendsList(profile);
     }
 
-    public List<Profile> getPendingFriendsList(Profile profile){
+    public Set<Profile> getPendingFriendsList(Profile profile){
         return userRepository.getPendingFriendsList(profile);
     }
 
@@ -68,7 +69,7 @@ public class UserManager {
         return userRepository.getFriendsMap();
     }
 
-    public Map<Profile, List<Profile>> getPendingFriendsMap(){
+    public Map<Profile, Set<Profile>> getPendingFriendsMap(){
         return userRepository.getPendingFriendsMap();
     }
 
@@ -102,6 +103,10 @@ public class UserManager {
 
     public void joinGroup(Profile profile, Group group){
         userRepository.joinGroup(profile,group);
+    }
+
+    public void exitGroup(Profile profile, Group group){
+        userRepository.exitGroup(profile,group);
     }
 
 }
