@@ -142,56 +142,67 @@ public class Main {
             System.out.print("\t\t11) Search");
             System.out.println("\t\t\t12) Log out");
 
-            System.out.println("Choose between 1-11: ");
-            int ans = input.nextInt();
-            input.nextLine();
+            System.out.println("Choose between 1-12: ");
+            try {
+                int ans = input.nextInt();
+                input.nextLine();
 
-            switch (ans) {
-                case 1:
-                    openProfile(member);
-                    break;
+                switch (ans) {
+                    case 1:
+                        openProfile(member);
+                        break;
 
-                case 2:
-                    openFeed(member);
-                    break;
+                    case 2:
+                        openFeed(member);
+                        break;
 
-                case 3:
-                    openInbox(member);
-                    break;
+                    case 3:
+                        openInbox(member);
+                        break;
 
-                case 4:
-                    createPost(member.getProfile());
-                    break;
+                    case 4:
+                        createPost(member.getProfile());
+                        break;
 
-                case 5:
-                    explore(member);
-                    break;
+                    case 5:
+                        explore(member);
+                        break;
 
-                case 6:
-                    myNetwork(member);
-                    break;
+                    case 6:
+                        myNetwork(member);
+                        break;
 
-                case 7:
-                    viewFriendRequests(member);
-                    break;
+                    case 7:
+                        viewFriendRequests(member);
+                        break;
 
-                case 8:
-                    managePages(member);
-                    break;
+                    case 8:
+                        managePages(member);
+                        break;
 
-                case 9:
-                    discoverGroups(member);
-                    break;
+                    case 9:
+                        discoverGroups(member);
+                        break;
 
-                case 10:
-                    openNotification(member);
-                    break;
+                    case 10:
+                        openNotification(member);
+                        break;
 
-                case 11:
-                    search(member);
-                    break;
+                    case 11:
+                        search(member);
+                        break;
 
-                case 12:  return;
+                    case 12:
+                        return;
+
+                    default:
+                        System.out.println("Non-existent choice. Try again");
+                        break;
+                }
+            }
+            catch (InputMismatchException ex){
+                System.out.println("Invalid input. Try again.");
+                input.nextLine();
             }
         }
     }
@@ -668,7 +679,7 @@ public class Main {
         if(groupMap != null){
             System.out.println("**Groups**");
             for(Map.Entry<String,Group> entry : groupMap.entrySet()){
-                System.out.println(entry.getKey());
+                System.out.println(entry.getValue().getGroupName());
             }
         }
     }
@@ -681,7 +692,8 @@ public class Main {
             System.out.println("You want to search for: ");
             System.out.println("1. People");
             System.out.println("2. Pages");
-            System.out.println("3. Return");
+            System.out.println("3. Groups");
+            System.out.println("4. Return");
 
             int ans = input.nextInt();
             input.nextLine();
@@ -696,6 +708,9 @@ public class Main {
                     break;
 
                 case 3:
+                    joinGroups(member);
+
+                case 4:
                     return;
             }
         }
@@ -809,7 +824,7 @@ public class Main {
             System.out.println("Joined Groups: ");
             if (userManager.getJoinedGroups().containsKey(profile) && !userManager.getJoinedGroups(profile).isEmpty()) {
                 for (Group group : userManager.getJoinedGroups(profile)) {
-                    System.out.printf("%s (%s)", group.getGroupName(), group.getGroupId());
+                    System.out.printf("%s (%s)\n", group.getGroupName(), group.getGroupId());
                 }
             } else System.out.println("No groups joined.");
 
@@ -1206,5 +1221,43 @@ public class Main {
 
         else System.out.println("No requests to show.");
     }
+
+    public static void joinGroups(Member member){
+        Profile memberProfile = member.getProfile();
+
+        System.out.println("Enter the name of the group: ");
+        String groupName = input.nextLine();
+
+        Map<String, Group> groups = groupManager.getGroupsMap();
+
+        for(Map.Entry<String,Group> entry : groups.entrySet()){
+            if (entry.getKey().equalsIgnoreCase(groupName) || entry.getKey().contains(groupName)) {
+                System.out.printf("%s (ID: %s)\n", entry.getValue().getGroupName(), entry.getValue().getGroupId());
+            }
+        }
+
+        System.out.println("1.Open Group 2.Join Group 3.Return");
+
+        int choice = input.nextInt();
+        input.nextLine();
+
+        if(choice == 3) return;
+
+        else{
+            System.out.println("Enter the ID of the group: ");
+            String id = input.nextLine();
+
+            Group group = groupManager.getGroupById(id);
+
+            if(choice == 1) viewGroup(group,memberProfile);
+
+            else if (choice == 2){
+                if(group.getPrivacyOption() == PrivacyOption.PRIVATE) groupManager.joinPrivateGroup(group,memberProfile);
+                else groupManager.joinGroup(group,memberProfile);
+            }
+
+            else System.out.println("Incorrect Input. Try again.");
+        }
+    } 
 
 }
