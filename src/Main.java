@@ -10,6 +10,7 @@ public class Main {
     public static PageManager pageManager = new PageManager(database);
     public static GroupManager groupManager = new GroupManager(database);
     public static ProfileManager profileManager = new ProfileManager(database);
+    public static PasswordHashingManager passwordManager = new PasswordHashingManager(database);
 
     public static void main(String[] args) {
 
@@ -73,7 +74,8 @@ public class Main {
             confirmedPassword = input.nextLine();
         }
 
-        member.setPassword(password);
+        String hashedPassword = passwordManager.getHashedPasswordRegistration(password);
+        member.setPassword(hashedPassword);
 
         profileManager.createProfile(member);
         userManager.addMember(member.getUserName(), member);
@@ -88,12 +90,15 @@ public class Main {
         String userName = input.nextLine();
 
         System.out.println("Password: ");
-        String password = input.nextLine();
+        String enteredPassword = input.nextLine();
 
         if (userManager.isFoundMember(userName)){
             Member member = userManager.getMember(userName);
+            String memberPassword = member.getPassword();
 
-            if(member.getPassword().equals(password)) {
+            String hashedEnteredPassword = passwordManager.getHashedPasswordLogin(memberPassword, enteredPassword);
+
+            if(memberPassword.equals(hashedEnteredPassword)) {
                  mainMenu(member);
             }
 
@@ -126,8 +131,9 @@ public class Main {
             confirmedPassword = input.nextLine();
         }
 
-        member.setPassword(confirmedPassword);
-
+        String newHashedPassword = passwordManager.getHashedPasswordRegistration(password);
+        member.setPassword(newHashedPassword);
+        System.out.println("Password has changed !");
     }
 
     public static void mainMenu(Member member){
