@@ -9,13 +9,14 @@ public class GroupManager {
         this.groupRepository = database.getGroupRepository();
     }
 
-    public void createGroup(Profile profile, String groupName){
+    public Group createGroup(Profile profile, String groupName){
         Group group = new Group(profile, groupName.toLowerCase());
         groupRepository.addGroup(profile, group);
+        return group;
     }
 
     public void displayGroups(){
-        Map<String, Group> groupMap = groupRepository.getGroupsMap();
+        Map<String, Group> groupMap = groupRepository.getGroupsById();
 
         if(!groupMap.isEmpty())
             groupMap.forEach((k,v) -> System.out.printf("%s (ID: %s)\n", v.getGroupName(), v.getGroupId()));
@@ -84,11 +85,19 @@ public class GroupManager {
         return groupRepository.getPendingMembers(group);
     }
 
-    public Map<String,Group> getGroupsMap(){
-        return groupRepository.getGroupsMap();
+    public Map<String,Group> getGroupsById(){
+        return groupRepository.getGroupsById();
+    }
+
+    public Map<String,Group> getGroupsByName(){
+        return groupRepository.getGroupsByName();
     }
 
     public void exitGroup(Group group, Profile member){
         groupRepository.exitGroup(group,member);
+    }
+
+    public List<Group> getGroupsByProfile(Profile profile){
+        return groupRepository.getGroupsByProfile(profile);
     }
 }

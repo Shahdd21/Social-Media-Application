@@ -4,5 +4,6 @@ public enum EventType {
     FOLLOW,
     NEW_MESSAGE,
     ACCEPTED_REQUEST,
-    JOIN_GROUP
+    JOIN_GROUP,
+    JOIN_REQUEST
 }

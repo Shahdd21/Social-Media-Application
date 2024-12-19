@@ -27,12 +27,18 @@ public class Main {
         System.out.println("\t 1:Register");
         System.out.println("\t 2:Login");
 
-        int choice = input.nextInt();
-        input.nextLine();
+        try {
+            int choice = input.nextInt();
+            input.nextLine();
 
-        if (choice == 1) register();
-        else if(choice == 2) login();
-        else System.out.println("Incorrect Input.");
+            if (choice == 1) register();
+            else if (choice == 2) login();
+            else System.out.println("Incorrect Input.");
+
+        } catch (InputMismatchException ex){
+            System.out.println("Invalid Input.");
+            input.nextLine();
+        }
     }
 
     public static void register(){
@@ -211,98 +217,111 @@ public class Main {
 
         NotificationManager notificationManager = new NotificationManager(database);
 
-        System.out.println("Chats: ");
-        String memberUsername = member.getUserName();
+        while(true) {
+            System.out.println("Chats: ");
+            String memberUsername = member.getUserName();
 
-        Map<String, List<Message>> conversations = chatManager.getConversations();
+            Map<String, List<Message>> conversations = chatManager.getConversations();
 
-        conversations.forEach((k,v) -> {
-            if(k.contains(memberUsername)){
-                String[] usernames = k.split("_");
-                String friendUsername = (usernames[0].equals(memberUsername) ? usernames[1] : usernames[0] );
-                System.out.println("\u2022"+friendUsername);
-                System.out.println(v.get(v.size()-1).getContent());
-                System.out.println("******************************************");
-            }
-        });
-
-        System.out.println("1: Open Chat 2: Add new Chat");
-        int ans = input.nextInt();
-        input.nextLine();
-
-        if(ans == 1){
-            System.out.println("Enter the username of the chat you want to open: ");
-            String friendUsername = input.nextLine();
-            String combination = (friendUsername.compareTo(memberUsername) < 0 ? friendUsername+"_"+memberUsername :
-                    memberUsername+"_"+friendUsername);
-
-            conversations.forEach((k,v) -> {
-                if(k.equals(combination)){
-                    for (Message message : v) {
-                        if(!message.getSender().getUsername().equals(memberUsername)){
-                        System.out.println(message.getSender().getUsername());
-                        System.out.println(message.getContent());
-                        }
-                        else System.out.println("\t\t\t"+message.getContent());
-
-                        System.out.println(message.getTimestamp());
-                    }
+            conversations.forEach((k, v) -> {
+                if (k.contains(memberUsername)) {
+                    String[] usernames = k.split("_");
+                    String friendUsername = (usernames[0].equals(memberUsername) ? usernames[1] : usernames[0]);
+                    System.out.println("\u2022" + friendUsername);
+                    System.out.println(v.get(v.size() - 1).getContent());
+                    System.out.println("******************************************");
                 }
             });
 
-            while(true) {
-                System.out.println("1: Send a message 2: Return");
-                int choice = input.nextInt();
-                input.nextLine();
+            System.out.println("1: Open Chat 2: Add new Chat 3: Return");
+            int ans = input.nextInt();
+            input.nextLine();
 
-                if (choice == 1) {
-                    System.out.println("Write your message: ");
-                    String content = input.nextLine();
-                    Message message = new Message(content, profileManager.getProfileByUsername(friendUsername),
-                            profileManager.getProfileByUsername(memberUsername));
+            if (ans == 1) {
+                System.out.println("Enter the username of the chat you want to open: ");
+                String friendUsername = input.nextLine();
+                String combination = (friendUsername.compareTo(memberUsername) < 0 ? friendUsername + "_" + memberUsername :
+                        memberUsername + "_" + friendUsername);
 
-                    chatManager.sendDirectMessage(message, profileManager.getProfileByUsername(memberUsername),
-                            profileManager.getProfileByUsername(friendUsername));
+                conversations.forEach((k, v) -> {
+                    if (k.equals(combination)) {
+                        for (Message message : v) {
+                            if (!message.getSender().getUsername().equals(memberUsername)) {
+                                System.out.println(message.getSender().getUsername());
+                                System.out.println(message.getContent());
+                                System.out.println(message.getTimestamp());
+                            } else {
+                                System.out.println("\t\t\t" + message.getContent());
+                                System.out.println("\t\t\t" + message.getTimestamp());
+                            }
+                        }
+                    }
+                });
 
-                    notificationManager.sendNotification(member.getProfile().getProfileId(),
-                            profileManager.getProfileByUsername(friendUsername).getProfileId(),
-                            EventType.NEW_MESSAGE, member.getFirstName()+" "+
-                                    member.getLastName()+" sent you a message");
-                } else {
-                    break;
+                while (true) {
+                    System.out.println("1: Send a message 2: Return");
+                    int choice = input.nextInt();
+                    input.nextLine();
+
+                    if (choice == 1) {
+                        System.out.println("Write your message: ");
+                        String content = input.nextLine();
+                        Message message = new Message(content, profileManager.getProfileByUsername(friendUsername),
+                                profileManager.getProfileByUsername(memberUsername));
+
+                        chatManager.sendDirectMessage(message, profileManager.getProfileByUsername(memberUsername),
+                                profileManager.getProfileByUsername(friendUsername));
+
+                        notificationManager.sendNotification(member.getProfile().getProfileId(),
+                                profileManager.getProfileByUsername(friendUsername).getProfileId(),
+                                EventType.NEW_MESSAGE, member.getFirstName() + " " +
+                                        member.getLastName() + " sent you a message");
+                    } else {
+                        break;
+                    }
                 }
             }
+
+            else if (ans == 2) {
+
+                if (userManager.getFriendsMap().containsKey(member.getProfile()) &&
+                        !userManager.getFriendsList(member.getProfile()).isEmpty()){
+
+                    for (Profile friend : userManager.getFriendsList(member.getProfile())) {
+                        System.out.printf("%s %s (%s)\n", friend.getFirstName(), friend.getLastName(),
+                                friend.getUsername());
+                    }
+
+                System.out.println("Write the username you want to send a message to: ");
+                String friendUsername = input.nextLine();
+
+                if (userManager.isFoundMember(friendUsername)) {
+                    if (userManager.getFriendsList(member.getProfile())
+                            .contains(profileManager.getProfileByUsername(friendUsername))) {
+                        System.out.println("Write your first message: ");
+                        String content = input.nextLine();
+
+                        Message message = new Message(content, profileManager.getProfileByUsername(friendUsername),
+                                member.getProfile());
+
+                        chatManager.sendDirectMessage(message, profileManager.getProfileByUsername(memberUsername),
+                                profileManager.getProfileByUsername(friendUsername));
+
+                        notificationManager.sendNotification(member.getProfile().getProfileId(),
+                                profileManager.getProfileByUsername(friendUsername).getProfileId(),
+                                EventType.NEW_MESSAGE, member.getFirstName() + " " +
+                                        member.getLastName() + " sent you a message");
+                    } else System.out.println("The user is not in your friends list");
+                } else System.out.println("The user does not exist");
+            }
+
+                else System.out.println("You have no friends to send messages to.");
         }
-        else if (ans == 2) {
-            for(Profile friend : userManager.getFriendsList(member.getProfile())){
-                System.out.printf("%s %s (%s)\n", friend.getFirstName(), friend.getLastName(),
-                        friend.getUsername());
+
+            else {
+                System.out.println("Non-existent choice.");
+                break;
             }
-
-            System.out.println("Write the username you want to send a message to: ");
-            String friendUsername = input.nextLine();
-
-            if(userManager.isFoundMember(friendUsername)){
-                if(userManager.getFriendsList(member.getProfile())
-                        .contains(profileManager.getProfileByUsername(friendUsername))){
-                    System.out.println("Write your first message: ");
-                    String content = input.nextLine();
-
-                    Message message = new Message(content, profileManager.getProfileByUsername(friendUsername),
-                            member.getProfile());
-
-                    chatManager.sendDirectMessage(message, profileManager.getProfileByUsername(memberUsername),
-                            profileManager.getProfileByUsername(friendUsername));
-
-                    notificationManager.sendNotification(member.getProfile().getProfileId(),
-                            profileManager.getProfileByUsername(friendUsername).getProfileId(),
-                            EventType.NEW_MESSAGE, member.getFirstName()+" "+
-                                    member.getLastName()+" sent you a message");
-                }
-
-                else System.out.println("The user is not in your friends list");
-            }
-            else System.out.println("The user does not exist");
         }
     }
 
@@ -354,157 +373,161 @@ public class Main {
             System.out.println("Here is Feed !");
             System.out.println();
 
-            if (userManager.getFriendsMap().containsKey(member.getProfile()) && !userManager.getFriendsList(memberProfile).isEmpty()) {
-                List<Profile> friendProfiles = userManager.getFriendsList(memberProfile);
+            try {
 
-                for(Profile friendProfile : friendProfiles){
-                    postManager.displayPosts(friendProfile);
+                if (userManager.getFriendsMap().containsKey(member.getProfile()) && !userManager.getFriendsList(memberProfile).isEmpty()) {
+                    List<Profile> friendProfiles = userManager.getFriendsList(memberProfile);
+
+                    for (Profile friendProfile : friendProfiles) {
+                        postManager.displayPosts(friendProfile);
+                    }
+
+                    System.out.println("Interact with the post:\n1: Like 2: Comment 3:Share 4:Nothing");
+                    int ans = input.nextInt();
+                    input.nextLine();
+
+                    if (ans != 4) {
+                        String notificationMessage = null;
+
+                        System.out.println("Enter the Post ID: ");
+                        String postId = input.nextLine();
+
+                        Post post = postManager.getPostById(postId);
+
+                        if (ans == 1) {
+                            postManager.addLike(post, memberProfile);
+                            notificationMessage = memberProfile.getFullName() + " liked your post with ID: " + postId;
+                        } else if (ans == 2) {
+                            Comment comment = new Comment();
+
+                            System.out.println("Enter your comment: ");
+                            String commentContent = input.nextLine();
+
+                            comment.setContent(commentContent);
+                            comment.setPost(post);
+                            comment.setAuthorProfile(member.getProfile());
+
+                            postManager.addComment(post, comment);
+                            notificationMessage = memberProfile.getFullName() + " commented on your post with ID: " + postId;
+                        } else if (ans == 3) {
+                            postManager.addPost(member.getProfile(), post);
+                            notificationMessage = memberProfile.getFullName() + " shared your post with ID: " + postId;
+                        } else {
+                            System.out.println("Incorrect Input. Try again");
+                            break;
+                        }
+
+                        notificationManager.sendNotification(memberProfile.getProfileId(), post.getCreatorId(),
+                                EventType.POST_INTERACTION, notificationMessage);
+                    }
                 }
 
-                System.out.println("Interact with the post:\n1: Like 2: Comment 3:Share 4:Nothing");
-                int ans = input.nextInt();
+                if (userManager.getFollowingMap().containsKey(member.getProfile()) && !userManager.getFollowingList(memberProfile).isEmpty()) {
+
+                    List<FollowedEntity> followingList = userManager.getFollowingList(memberProfile);
+
+                    for (FollowedEntity followedEntity : followingList) {
+                        postManager.displayPosts(followedEntity);
+                    }
+
+                    System.out.println("Interact with the post:\n1: Like 2:Share 3:Nothing");
+                    int ans = input.nextInt();
+                    input.nextLine();
+
+                    if (ans != 3) {
+                        String notificationMessage = null;
+
+                        System.out.println("Enter the Post ID: ");
+                        String postId = input.nextLine();
+
+                        Post post = postManager.getPostById(postId);
+
+                        if (ans == 1) {
+                            postManager.addLike(post, member.getProfile());
+                            notificationMessage = memberProfile.getFullName() + " liked your post with ID: " + postId;
+                        } else if (ans == 2) {
+                            postManager.addPost(member.getProfile(), post);
+                            notificationMessage = memberProfile.getFullName() + " shared your post with ID:" + postId;
+                        } else {
+                            System.out.println("Incorrect Input. Try again");
+                            break;
+                        }
+
+                        notificationManager.sendNotification(memberProfile.getProfileId(), post.getCreatorId(),
+                                EventType.POST_INTERACTION, notificationMessage);
+                    }
+                }
+
+                if (userManager.getJoinedGroups().containsKey(memberProfile) && !userManager.getJoinedGroups(memberProfile).isEmpty()) {
+                    List<Group> groups = userManager.getJoinedGroups(memberProfile);
+
+                    for (Group group : groups) {
+                        postManager.displayPosts(group);
+                    }
+
+                    System.out.println("Interact with the post:\n1: Like 2: Comment 3:Share 4:Nothing");
+                    int ans = input.nextInt();
+                    input.nextLine();
+
+                    if (ans != 4) {
+                        String notificationMessage = null;
+
+                        System.out.println("Enter the Post ID: ");
+                        String postId = input.nextLine();
+
+                        Post post = postManager.getPostById(postId);
+
+                        int groupIdIdx = postId.indexOf("G") + 1;
+                        String groupId = postId.substring(groupIdIdx);
+                        Group group = groupManager.getGroupById(groupId);
+
+                        if (ans == 1) {
+                            postManager.addLike(post, memberProfile);
+                            notificationMessage = memberProfile.getFullName() + " liked your post with ID: " + postId
+                                    + " in group: " + group.getGroupName();
+                        } else if (ans == 2) {
+                            Comment comment = new Comment();
+
+                            System.out.println("Enter your comment: ");
+                            String commentContent = input.nextLine();
+
+                            comment.setContent(commentContent);
+                            comment.setPost(post);
+                            comment.setAuthorProfile(member.getProfile());
+
+                            postManager.addComment(post, comment);
+                            notificationMessage = memberProfile.getFullName() + " commented on your post with ID: " + postId
+                                    + " in group: " + group.getGroupName();
+                        } else if (ans == 3) {
+                            postManager.addPost(member.getProfile(), post);
+                            notificationMessage = memberProfile.getFullName() + " shared your post with ID: " + postId
+                                    + " in group: " + group.getGroupName();
+                        } else {
+                            System.out.println("Incorrect Input. Try again.");
+                            break;
+                        }
+
+                        notificationManager.sendNotification(memberProfile.getProfileId(), post.getCreatorId(),
+                                EventType.POST_INTERACTION, notificationMessage);
+                    }
+
+                } else {
+                    if (postManager.getPostsMap().containsKey(memberProfile)
+                            && !postManager.getPostsList(memberProfile).isEmpty()) {
+                        postManager.displayPosts(memberProfile);
+                    } else System.out.println("No posts to display.");
+                }
+
+                System.out.println("Return to Main Menu? Y/N");
+                String c = input.nextLine();
+
+                if (c.equals("Y")) return;
+            }
+
+            catch (InputMismatchException ex){
+                System.out.println("Invalid Input.");
                 input.nextLine();
-
-                if(ans != 4){
-                    String notificationMessage = null;
-
-                    System.out.println("Enter the Post ID: ");
-                    String postId = input.nextLine();
-
-                    Post post = postManager.getPostById(postId);
-
-                    if(ans == 1) {
-                        postManager.addLike(post, memberProfile);
-                        notificationMessage = memberProfile.getFullName()+" liked your post with ID: "+postId;
-                    }
-
-                    if(ans == 2) {
-                        Comment comment = new Comment();
-
-                        System.out.println("Enter your comment: ");
-                        String commentContent = input.nextLine();
-
-                        comment.setContent(commentContent);
-                        comment.setPost(post);
-                        comment.setAuthorProfile(member.getProfile());
-
-                        postManager.addComment(post,comment);
-                        notificationMessage = memberProfile.getFullName()+" commented on your post with ID: "+postId;
-                    }
-
-                    if(ans == 3){
-                        postManager.addPost(member.getProfile(),post);
-                        notificationMessage = memberProfile.getFullName()+" shared your post with ID: "+postId;
-                    }
-
-                    notificationManager.sendNotification(memberProfile.getProfileId(), post.getCreatorId(),
-                            EventType.POST_INTERACTION, notificationMessage);
-                }
             }
-
-            if(userManager.getFollowingMap().containsKey(member.getProfile()) && !userManager.getFollowingList(memberProfile).isEmpty()){
-
-                List<FollowedEntity> followingList = userManager.getFollowingList(memberProfile);
-
-                for(FollowedEntity followedEntity : followingList){
-                    postManager.displayPosts(followedEntity);
-                }
-
-                System.out.println("Interact with the post:\n1: Like 2:Share 3:Nothing");
-                int ans = input.nextInt();
-                input.nextLine();
-
-                if (ans != 3){
-                    String notificationMessage = null;
-
-                    System.out.println("Enter the Post ID: ");
-                    String postId = input.nextLine();
-
-                    Post post = postManager.getPostById(postId);
-
-                    if(ans == 1){
-                        postManager.addLike(post, member.getProfile());
-                        notificationMessage = memberProfile.getFullName() + " liked your post with ID: "+ postId;
-                    }
-
-                    if(ans == 2){
-                        postManager.addPost(member.getProfile(), post);
-                        notificationMessage = memberProfile.getFullName() +" shared your post with ID:"+ postId;
-                    }
-
-                    notificationManager.sendNotification(memberProfile.getProfileId(), post.getCreatorId(),
-                            EventType.POST_INTERACTION, notificationMessage);
-                }
-            }
-
-            if(userManager.getJoinedGroups().containsKey(memberProfile) && !userManager.getJoinedGroups(memberProfile).isEmpty()){
-                List<Group> groups = userManager.getJoinedGroups(memberProfile);
-
-                for(Group group: groups){
-                    postManager.displayPosts(group);
-                }
-
-                System.out.println("Interact with the post:\n1: Like 2: Comment 3:Share 4:Nothing");
-                int ans = input.nextInt();
-                input.nextLine();
-
-                if(ans != 4){
-                    String notificationMessage = null;
-
-                    System.out.println("Enter the Post ID: ");
-                    String postId = input.nextLine();
-
-                    Post post = postManager.getPostById(postId);
-
-                    int groupIdIdx = postId.indexOf("G")+1;
-                    String groupId = postId.substring(groupIdIdx);
-                    Group group = groupManager.getGroupById(groupId);
-
-                    if(ans == 1) {
-                        postManager.addLike(post, memberProfile);
-                        notificationMessage = memberProfile.getFullName()+" liked your post with ID: "+postId
-                        +" in group: "+ group.getGroupName();
-                    }
-
-                    if(ans == 2) {
-                        Comment comment = new Comment();
-
-                        System.out.println("Enter your comment: ");
-                        String commentContent = input.nextLine();
-
-                        comment.setContent(commentContent);
-                        comment.setPost(post);
-                        comment.setAuthorProfile(member.getProfile());
-
-                        postManager.addComment(post,comment);
-                        notificationMessage = memberProfile.getFullName()+" commented on your post with ID: "+postId
-                                +" in group: "+ group.getGroupName();
-                    }
-
-                    if(ans == 3){
-                        postManager.addPost(member.getProfile(),post);
-                        notificationMessage = memberProfile.getFullName()+" shared your post with ID: "+postId
-                                +" in group: "+ group.getGroupName();
-                    }
-
-                    notificationManager.sendNotification(memberProfile.getProfileId(), post.getCreatorId(),
-                            EventType.POST_INTERACTION, notificationMessage);
-                }
-
-            }
-
-            else {
-                if(postManager.getPostsMap().containsKey(memberProfile)
-                        &&!postManager.getPostsList(memberProfile).isEmpty()) {
-                    postManager.displayPosts(memberProfile);
-                }
-                else System.out.println("No posts to display.");
-            }
-
-            System.out.println("Return to Main Menu? Y/N");
-            String c = input.nextLine();
-
-            if(c.equals("Y")) return;
         }
     }
 
@@ -574,73 +597,83 @@ public class Main {
             System.out.println("9-Edit Interested in");
             System.out.println("Choose from 1-9 to edit and 0 to return");
 
-            int ans = input.nextInt();
-            input.nextLine();
+            try {
+                int ans = input.nextInt();
+                input.nextLine();
 
-            if(ans == 0) break;
+                if (ans == 0) break;
 
-            switch (ans){
-                case 1:{
-                    System.out.println("Write your thoughts: ");
-                    String bio = input.nextLine();
-                    profile.setBio(bio);
+                switch (ans) {
+                    case 1: {
+                        System.out.println("Write your thoughts: ");
+                        String bio = input.nextLine();
+                        profile.setBio(bio);
+                    }
+                    break;
+
+                    case 2: {
+                        System.out.println("Enter School/University: ");
+                        String school = input.nextLine();
+                        profile.setSchool(school);
+                    }
+                    break;
+
+                    case 3: {
+                        System.out.println("Enter work place/position: ");
+                        String work = input.nextLine();
+                        profile.setWork(work);
+                    }
+                    break;
+
+                    case 4: {
+                        System.out.println("Enter Gender: ");
+                        String gender = input.nextLine();
+                        profile.setGender(gender);
+                    }
+                    break;
+
+                    case 5: {
+                        System.out.println("Enter Religion: ");
+                        String religion = input.nextLine();
+                        profile.setReligion(religion);
+                    }
+                    break;
+
+                    case 6: {
+                        System.out.println("Enter City: ");
+                        String city = input.nextLine();
+                        profile.setCity(city);
+                    }
+                    break;
+
+                    case 7: {
+                        System.out.println("Enter country: ");
+                        String country = input.nextLine();
+                        profile.setCountry(country);
+                    }
+                    break;
+
+                    case 8: {
+                        System.out.println("Enter Birth Date: ");
+                        String birthdate = input.nextLine();
+                        profile.setBirthdate(birthdate);
+                    }
+                    break;
+
+                    case 9: {
+                        System.out.println("Enter Sex Preference: ");
+                        String sexPreference = input.nextLine();
+                        profile.setSexPreference(sexPreference);
+                    }
+
+                    default: {
+                        System.out.println("Non-existent input. Try again");
+                        break;
+                    }
                 }
-                break;
-
-                case 2:{
-                    System.out.println("Enter School/University: ");
-                    String school = input.nextLine();
-                    profile.setSchool(school);
-                }
-                break;
-
-                case 3:{
-                    System.out.println("Enter work place/position: ");
-                    String work = input.nextLine();
-                    profile.setWork(work);
-                }
-                break;
-
-                case 4:{
-                    System.out.println("Enter Gender: ");
-                    String gender = input.nextLine();
-                    profile.setGender(gender);
-                }
-                break;
-
-                case 5:{
-                    System.out.println("Enter Religion: ");
-                    String religion = input.nextLine();
-                    profile.setReligion(religion);
-                }
-                break;
-
-                case 6:{
-                    System.out.println("Enter City: ");
-                    String city = input.nextLine();
-                    profile.setCity(city);
-                }
-                break;
-
-                case 7:{
-                    System.out.println("Enter country: ");
-                    String country = input.nextLine();
-                    profile.setCountry(country);
-                }
-                break;
-
-                case 8:{
-                    System.out.println("Enter Birth Date: ");
-                    String birthdate = input.nextLine();
-                    profile.setBirthdate(birthdate);
-                }
-                break;
-
-                case 9:{
-                    System.out.println("Enter Sex Preference: ");
-                    String sexPreference = input.nextLine();
-                    profile.setSexPreference(sexPreference);
-                }
+            } catch (InputMismatchException ex){
+                System.out.println("Invalid Input.");
+                input.nextLine();
             }
         }
 
@@ -674,7 +707,7 @@ public class Main {
 
         //groups exploring
 
-        Map<String,Group> groupMap = groupManager.getGroupsMap();
+        Map<String,Group> groupMap = groupManager.getGroupsById();
 
         if(groupMap != null){
             System.out.println("**Groups**");
@@ -695,23 +728,34 @@ public class Main {
             System.out.println("3. Groups");
             System.out.println("4. Return");
 
-            int ans = input.nextInt();
-            input.nextLine();
+            try {
+                int ans = input.nextInt();
+                input.nextLine();
 
-            switch (ans) {
-                case 1:
-                    addPeople(member);
-                break;
+                switch (ans) {
+                    case 1:
+                        addPeople(member);
+                        break;
 
-                case 2:
-                    followPages(member);
-                    break;
+                    case 2:
+                        followPages(member);
+                        break;
 
-                case 3:
-                    joinGroups(member);
+                    case 3:
+                        joinGroups(member);
+                        break;
 
-                case 4:
-                    return;
+                    case 4:
+                        return;
+
+                    default: {
+                        System.out.println("Non-existent input. Try again");
+                        break;
+                    }
+                }
+            } catch (InputMismatchException ex){
+                System.out.println("Invalid Input.");
+                input.nextLine();
             }
         }
     }
@@ -723,35 +767,39 @@ public class Main {
         System.out.println("Type the username of the friend you want to add/follow: ");
         String friendUsername = input.nextLine();
 
-        System.out.println("1: Add friend 2:Follow ");
-        int ans = input.nextInt();
-        input.nextLine();
+        try {
+            System.out.println("1: Add friend 2:Follow ");
+            int ans = input.nextInt();
+            input.nextLine();
 
 
-        if(!userManager.isFoundMember(friendUsername)) System.out.println("The username doesn't exist");
+            if (!userManager.isFoundMember(friendUsername)) System.out.println("The username doesn't exist");
 
-        else {
-            Profile friendProfile = profileManager.getProfileByUsername(friendUsername);
-            NotificationManager notificationManager = new NotificationManager(database);
+            else {
+                Profile friendProfile = profileManager.getProfileByUsername(friendUsername);
+                NotificationManager notificationManager = new NotificationManager(database);
 
-            if (ans == 1) {
+                if (ans == 1) {
 
-                userManager.addFriend(friendProfile, memberProfile);
-                System.out.println("your friend request is sent !");
+                    userManager.addFriend(friendProfile, memberProfile);
+                    System.out.println("your friend request is sent !");
 
-                notificationManager.sendNotification(memberProfile.getProfileId(),
-                        friendProfile.getProfileId(), EventType.FRIEND_REQUEST,
-                        memberProfile.getFullName() + " sent you a friend request");
+                    notificationManager.sendNotification(memberProfile.getProfileId(),
+                            friendProfile.getProfileId(), EventType.FRIEND_REQUEST,
+                            memberProfile.getFullName() + " sent you a friend request");
+                } else {
+                    userManager.follow(friendProfile, memberProfile);
+
+                    System.out.println("your follow them now !");
+
+                    notificationManager.sendNotification(memberProfile.getProfileId(),
+                            friendProfile.getProfileId(), EventType.FOLLOW,
+                            memberProfile.getFullName() + " follows you !");
+                }
             }
-            else{
-                userManager.follow(friendProfile, memberProfile);
-
-                System.out.println("your follow them now !");
-
-                notificationManager.sendNotification(memberProfile.getProfileId(),
-                        friendProfile.getProfileId(), EventType.FOLLOW,
-                        memberProfile.getFullName() + " follows you !");
-            }
+        } catch (InputMismatchException ex){
+            System.out.println("Invalid Input.");
+            input.nextLine();
         }
     }
 
@@ -771,28 +819,37 @@ public class Main {
 
         System.out.println("1.Open Page  2.Follow Page 3.Return");
 
-        int choice = input.nextInt();
-        input.nextLine();
+        try {
+            int choice = input.nextInt();
+            input.nextLine();
 
-        if(choice != 3){
-            System.out.println("Enter the id of the page: ");
-            String id = input.nextLine();
-            Page chosenPage = pageManager.getPageById(id);
+            if (choice != 3) {
+                System.out.println("Enter the id of the page: ");
+                String id = input.nextLine();
+                Page chosenPage = pageManager.getPageById(id);
 
-            if(choice == 1) openPageProfile(chosenPage);
+                if (choice == 1) openPageProfile(chosenPage);
 
-            else if(choice == 2) {
-                userManager.follow(chosenPage, memberProfile);
+                else if (choice == 2) {
+                    userManager.follow(chosenPage, memberProfile);
 
-                System.out.println("You follow the page now !");
-                notificationManager.sendNotification(memberProfile.getID(), chosenPage.getPageId(),
-                        EventType.FOLLOW, memberProfile.getFullName()+" follows you !");
-            }
+                    System.out.println("You follow the page now !");
+                    notificationManager.sendNotification(memberProfile.getID(), chosenPage.getPageId(),
+                            EventType.FOLLOW, memberProfile.getFullName() + " follows you !");
+                }
 
-            else System.out.println("Invalid choice. Try again.");
+                else System.out.println("Invalid choice. Try again.");
+
+            } else return;
+
+        } catch (InputMismatchException ex){
+            System.out.println("Invalid Input.");
+            input.nextLine();
         }
 
-        else return;
+        catch (NullPointerException ex){
+            System.out.println("There's no such a page.");
+        }
     }
 
     public static void myNetwork(Member member){
@@ -830,61 +887,76 @@ public class Main {
 
             System.out.println("1.Remove Friend 2.Unfollow People/Page 3.Exit Group 4.Nothing");
 
-            int ans = input.nextInt(); input.nextLine();
+            try {
+                int ans = input.nextInt();
+                input.nextLine();
 
+                if (ans == 4) return;
 
-            if(ans == 4) return;
+                else {
+                    if (ans == 1) {
+                        System.out.println("Write the ID of the friend you want to remove: ");
+                        String id = input.nextLine();
 
-            else{
-                if(ans == 1){
-                    System.out.println("Write the ID of the friend you want to remove: ");
-                    String id = input.nextLine();
+                        Profile friendProfile = profileManager.getProfileById(id);
+                        userManager.deleteFriend(profile, friendProfile);
 
-                    Profile friendProfile = profileManager.getProfileById(id);
-                    userManager.deleteFriend(profile,friendProfile);
+                        System.out.println(friendProfile.getFullName() + " is removed from your network!");
+                    } else if (ans == 2) {
+                        System.out.println("Write the ID of the friend/page you want to unfollow: ");
+                        String id = input.nextLine();
 
-                    System.out.println(friendProfile.getFullName()+" is removed from your network!");
+                        FollowedEntity followedEntity = profileManager.getProfileById(id) != null ?
+                                profileManager.getProfileById(id) : pageManager.getPageById(id);
+
+                        userManager.unfollow(profile, followedEntity);
+
+                        System.out.println(followedEntity.getFullName() + " is removed from your following list!");
+                    } else if (ans == 3) {
+                        System.out.println("Write the ID of the group you want to exit: ");
+                        String id = input.nextLine();
+
+                        Group group = groupManager.getGroupById(id);
+
+                        userManager.exitGroup(profile, group);
+                        groupManager.exitGroup(group, profile);
+
+                        System.out.println("You left group: " + group.getGroupName() + "!");
+                    } else {
+                        System.out.println("Incorrect Choice. Try again");
+                        break;
+                    }
                 }
-
-                else if(ans == 2){
-                    System.out.println("Write the ID of the friend/page you want to unfollow: ");
-                    String id = input.nextLine();
-
-                    FollowedEntity followedEntity = profileManager.getProfileById(id) != null ?
-                            profileManager.getProfileById(id) : pageManager.getPageById(id);
-
-                    userManager.unfollow(profile, followedEntity);
-
-                    System.out.println(followedEntity.getFullName()+" is removed from your following list!");
-                }
-
-                else{
-                    System.out.println("Write the ID of the group you want to exit: ");
-                    String id = input.nextLine();
-
-                    Group group = groupManager.getGroupById(id);
-
-                    userManager.exitGroup(profile,group);
-                    groupManager.exitGroup(group,profile);
-
-                    System.out.println("You left group: "+ group.getGroupName()+"!");
-                }
+            } catch (InputMismatchException ex){
+                System.out.println("Invalid Input.");
+                input.nextLine();
             }
         }
     }
 
     public static void openNotification(Member member) {
 
-        System.out.println("Profile notifications: ");
-        notificationManager.displayNotification(member.getProfile().getProfileId());
+        Profile memberProfile = member.getProfile();
 
-        List<Page> ownedPages = pageManager.getPagesList(member.getProfile());
+        System.out.println("Profile notifications: ");
+        notificationManager.displayNotification(memberProfile.getProfileId());
+
+        List<Page> ownedPages = pageManager.getPagesList(memberProfile);
         if(ownedPages != null && !ownedPages.isEmpty()){
 
             System.out.println("Pages notifications: ");
             for(Page page : ownedPages) {
                 System.out.println(page.getPageName());
                 notificationManager.displayNotification(page.getPageId());
+            }
+        }
+
+        List<Group> ownedGroups = groupManager.getGroupsByProfile(memberProfile);
+        if(ownedGroups != null && !ownedGroups.isEmpty()){
+            System.out.println("Groups notifications:");
+            for(Group group : ownedGroups){
+                System.out.println(group.getGroupName());
+                notificationManager.displayNotification(group.getGroupId());
             }
         }
     }
@@ -900,39 +972,48 @@ public class Main {
             System.out.println("3.Switch to Page Mode");
             System.out.println("4.Return");
 
-            int ans = input.nextInt();
-            input.nextLine();
+            try {
+                int ans = input.nextInt();
+                input.nextLine();
 
-            switch (ans){
-                case 1:
-                {
-                    System.out.println("Enter the name of the page: ");
-                    String name = input.nextLine();
-                    System.out.println("Enter the category: ");
-                    String category = input.nextLine();
-                    System.out.println("Enter the description (Bio): ");
-                    String bio = input.nextLine();
+                switch (ans) {
+                    case 1: {
+                        System.out.println("Enter the name of the page: ");
+                        String name = input.nextLine();
+                        System.out.println("Enter the category: ");
+                        String category = input.nextLine();
+                        System.out.println("Enter the description (Bio): ");
+                        String bio = input.nextLine();
 
-                    pageManager.createPage(name,category,bio, memberProfile);
+                        pageManager.createPage(name, category, bio, memberProfile);
+                    }
+                    break;
+
+                    case 2:
+                        pageManager.displayPagesList(memberProfile);
+                        break;
+
+                    case 3: {
+                        System.out.println("Enter the ID of the page: ");
+                        String id = input.nextLine();
+                        Page page = pageManager.getPageById(id);
+
+                        if (page != null) pageMode(page);
+                        else System.out.println("No such page with this name.");
+                    }
+                    break;
+
+                    case 4:
+                        return;
+
+                    default: {
+                        System.out.println("Incorrect Choice. Try again");
+                        break;
+                    }
                 }
-                break;
-
-                case 2:
-                    pageManager.displayPagesList(memberProfile);
-                break;
-
-                case 3:{
-                    System.out.println("Enter the ID of the page: ");
-                    String id = input.nextLine();
-                    Page page = pageManager.getPageById(id);
-
-                    if(page != null) pageMode(page);
-                    else System.out.println("No such page with this name.");
-                }
-                break;
-
-                case 4:
-                    return;
+            } catch(InputMismatchException ex){
+                System.out.println("Invalid Input.");
+                input.nextLine();
             }
         }
     }
@@ -949,24 +1030,36 @@ public class Main {
 
             System.out.println("Enter your choice: ");
 
-            int ans = input.nextInt();
-            input.nextLine();
+            try {
+                int ans = input.nextInt();
+                input.nextLine();
 
-            switch (ans){
-                case 1:
-                    createPost(page);
+                switch (ans) {
+                    case 1:
+                        createPost(page);
+                        break;
+
+                    case 2:
+                        openPageProfile(page);
+                        break;
+
+                    case 3: {
+                        userManager.displayFollowers(page);
+                    }
                     break;
 
-                case 2:
-                    openPageProfile(page);
-                    break;
+                    case 4:
+                        return;
 
-                case 3:{
-                    userManager.displayFollowers(page);
+                    default: {
+                        System.out.println("Incorrect Choice. Try again");
+                        break;
+                    }
                 }
-                    break;
 
-                case 4: return;
+            } catch (InputMismatchException ex){
+                System.out.println("Invalid Input. Try again");
+                input.nextLine();
             }
         }
     }
@@ -988,72 +1081,90 @@ public class Main {
             System.out.println("4.Create a new group");
             System.out.println("5.Return");
 
-            int ans = input.nextInt();
-            input.nextLine();
+            try {
+                int ans = input.nextInt();
+                input.nextLine();
 
-            switch (ans) {
-                case 1:
-                    groupManager.displayGroups();
-                break;
+                switch (ans) {
+                    case 1:
+                        groupManager.displayGroups();
+                        break;
 
-                case 2:
-                    groupManager.displayGroupsOf(member.getProfile());
-                break;
+                    case 2:
+                        groupManager.displayGroupsOf(member.getProfile());
+                        break;
 
-                case 3:{
-                    System.out.println("Enter the ID of the group: ");
-                    String id = input.nextLine();
+                    case 3: {
+                        System.out.println("Enter the ID of the group: ");
+                        String id = input.nextLine();
 
-                    if (!groupManager.findGroup(id)) System.out.println("No such a group with this ID.");
+                        if (!groupManager.findGroup(id)) System.out.println("No such a group with this ID.");
 
-                    else {
-                        Group group = groupManager.getGroupById(id);
-                        viewGroup(group, member.getProfile());
+                        else {
+                            Group group = groupManager.getGroupById(id);
+                            viewGroup(group, member.getProfile());
+                        }
+                    }
+                    break;
+
+                    case 4: {
+                        System.out.println("Write the name of the group: ");
+                        String name = input.nextLine();
+
+                        Group group = groupManager.createGroup(member.getProfile(), name);
+                        userManager.joinGroup(member.getProfile(),group);
+
+                        System.out.println("The Group is Created !");
+                    }
+                    break;
+
+                    case 5:
+                        return;
+
+                    default: {
+                        System.out.println("Incorrect Choice. Try again");
+                        break;
                     }
                 }
-                break;
 
-                case 4: {
-                    System.out.println("Write the name of the group: ");
-                    String name = input.nextLine();
-
-                    groupManager.createGroup(member.getProfile(), name);
-
-                    System.out.println("The Group is Created !");
-                }
-                break;
-
-                case 5: return;
+            } catch (InputMismatchException ex){
+                System.out.println("Invalid Input. Try again");
+                input.nextLine();
             }
         }
     }
 
     public static void viewGroup(Group group, Profile memberProfile){
 
-        while (true) {
-            if (group.getPrivacyOption() == PrivacyOption.PRIVATE) {
-                System.out.println("About:");
-                System.out.println(group.getBio());
-                System.out.println("This group is private");
-                System.out.println("Joined Members: " + groupManager.getJoinedMembers(group).size());
+        if(memberProfile == group.getCreatorAdminProfile()) openGroup(group,memberProfile);
 
-                System.out.println("Join Group ? Y/N");
+        else {
+            while (true) {
+                if (group.getPrivacyOption() == PrivacyOption.PRIVATE) {
+                    System.out.println("About:");
+                    System.out.println(group.getBio());
+                    System.out.println("This group is private");
+                    System.out.println("Joined Members: " + groupManager.getJoinedMembers(group).size());
 
-                String choice = input.nextLine();
+                    System.out.println("Join Group ? Y/N");
 
-                if (choice.equals("Y")) {
-                    groupManager.joinPrivateGroup(group, memberProfile);
-                    System.out.println("Your request is sent and waiting for the admin to approve it!");
+                    String choice = input.nextLine();
+
+                    if (choice.equals("Y")) {
+                        groupManager.joinPrivateGroup(group, memberProfile);
+                        System.out.println("Your request is sent and waiting for the admin to approve it!");
+
+                        notificationManager.sendNotification(memberProfile.getProfileId(), group.getGroupId(),
+                                EventType.JOIN_REQUEST, memberProfile.getFullName()+" has requested to join the group.");
+
+                        return;
+                    }
+                    else return;
+
+                } else {
+                    openGroup(group, memberProfile);
                     return;
                 }
-
-                else return;
-
-            }
-
-            else {
-                openGroup(group, memberProfile);
-                return;
             }
         }
     }
@@ -1075,67 +1186,81 @@ public class Main {
             }
 
             if (!groupManager.findJoinedMember(group, memberProfile))
-                System.out.println("9.Join Group");
+                System.out.println("0.Join Group");
 
-            int ans = input.nextInt();
-            input.nextLine();
+            try {
+                int ans = input.nextInt();
+                input.nextLine();
 
-            switch (ans) {
-                case 1: {
-                    System.out.println("About:");
-                    System.out.println(group.getBio());
-                    System.out.println(group.getPrivacyOption().toString());
-                    System.out.println("Joined Members: " + groupManager.getJoinedMembers(group).size());
+                switch (ans) {
+                    case 1: {
+                        System.out.println("About:");
+                        System.out.println(group.getBio());
+                        System.out.println(group.getPrivacyOption().toString());
+                        System.out.println("Joined Members: " + groupManager.getJoinedMembers(group).size());
+                    }
+                    break;
+
+                    case 2:
+                        postManager.displayPosts(group);
+                        break;
+
+                    case 3:
+                        createPost(group, memberProfile);
+                        break;
+
+                    case 4:
+                        groupManager.displayMembersOf(group);
+                        break;
+
+                    case 5:
+                        return;
+
+                    case 6:
+                        reviewRequests(group, memberProfile);
+                        break;
+
+                    case 7: {
+                        System.out.println("Enter username of the profile you want to add: ");
+                        String username = input.nextLine();
+
+                        Profile profile = profileManager.getProfileByUsername(username);
+
+                        groupManager.joinGroup(group, profile);
+                        userManager.joinGroup(profile, group);
+
+                        notificationManager.sendNotification(group.getCreatorAdminProfile().getProfileId(),
+                                profile.getProfileId(), EventType.JOIN_GROUP,
+                                group.getCreatorAdminProfile().getFullName() + " added you to group: "
+                                        + group.getGroupName());
+
+                        System.out.println(profile.getFullName() + " is added successfully !");
+                    }
+                    break;
+
+                    case 8:
+                        groupSettings(group);
+                        break;
+
+                    case 0: {
+                        groupManager.joinGroup(group, memberProfile);
+                        userManager.joinGroup(memberProfile, group);
+                        System.out.println("You've joined the group ! Welcome !");
+
+                        notificationManager.sendNotification(memberProfile.getProfileId(), group.getGroupId(),
+                                EventType.JOIN_REQUEST, memberProfile.getFullName()+" has joined the group!");
+                    }
+                    break;
+
+                    default: {
+                        System.out.println("Incorrect Choice. Try again");
+                        break;
+                    }
                 }
-                break;
 
-                case 2:
-                    postManager.displayPosts(group);
-                    break;
-
-                case 3:
-                    createPost(group, memberProfile);
-                    break;
-
-                case 4:
-                    groupManager.displayMembersOf(group);
-                    break;
-
-                case 5:
-                    return;
-
-                case 6:
-                    reviewRequests(group, memberProfile);
-                break;
-
-                case 7:{
-                    System.out.println("Enter username of the profile you want to add: ");
-                    String username = input.nextLine();
-
-                    Profile profile = profileManager.getProfileByUsername(username);
-
-                    groupManager.joinGroup(group,profile);
-                    userManager.joinGroup(profile,group);
-
-                    notificationManager.sendNotification(group.getCreatorAdminProfile().getProfileId(),
-                            profile.getProfileId(), EventType.JOIN_GROUP,
-                            group.getCreatorAdminProfile().getFullName() +" added you to group: "
-                    + group.getGroupName());
-
-                    System.out.println(profile.getFullName()+" is added successfully !");
-                }
-                   break;
-
-                case 8:
-                    groupSettings(group);
-                    break;
-
-                case 9: {
-                    groupManager.joinGroup(group, memberProfile);
-                    userManager.joinGroup(memberProfile,group);
-                    System.out.println("You've joined the group ! Welcome !");
-                }
-                break;
+            } catch (InputMismatchException ex){
+                System.out.println("Invalid Input. Try again");
+                input.nextLine();
             }
         }
     }
@@ -1147,47 +1272,58 @@ public class Main {
             System.out.println("3.Edit Privacy option");
             System.out.println("4.Return");
 
-            int ans = input.nextInt();
-            input.nextLine();
+            try {
+                int ans = input.nextInt();
+                input.nextLine();
 
-            switch (ans) {
-                case 1: {
-                    System.out.println("Enter new name: ");
-                    String name = input.nextLine();
+                switch (ans) {
+                    case 1: {
+                        System.out.println("Enter new name: ");
+                        String name = input.nextLine();
 
-                    group.setGroupName(name);
-                    System.out.println("Group name successfully changed!");
-                }
-                break;
+                        group.setGroupName(name);
+                        System.out.println("Group name successfully changed!");
+                    }
+                    break;
 
-                case 2: {
-                    System.out.println("Enter new bio: ");
-                    String bio = input.nextLine();
+                    case 2: {
+                        System.out.println("Enter new bio: ");
+                        String bio = input.nextLine();
 
-                    group.setBio(bio);
-                    System.out.println("Group Bio successfully changed!");
-                }
-                break;
+                        group.setBio(bio);
+                        System.out.println("Group Bio successfully changed!");
+                    }
+                    break;
 
-                case 3: {
-                    System.out.println("Now: "+group.getPrivacyOption().toString());
-                    System.out.println("Change ? Y/N");
+                    case 3: {
+                        System.out.println("Now: " + group.getPrivacyOption().toString());
+                        System.out.println("Change ? Y/N");
 
-                    String choice = input.nextLine();
+                        String choice = input.nextLine();
 
-                    if(choice.equals("Y")){
-                        PrivacyOption privacyOption = group.getPrivacyOption() == PrivacyOption.PRIVATE ?
-                                        PrivacyOption.PUBLIC : PrivacyOption.PRIVATE;
+                        if (choice.equals("Y")) {
+                            PrivacyOption privacyOption = group.getPrivacyOption() == PrivacyOption.PRIVATE ?
+                                    PrivacyOption.PUBLIC : PrivacyOption.PRIVATE;
 
-                        group.setPrivacyOption(privacyOption);
+                            group.setPrivacyOption(privacyOption);
 
-                        System.out.println("Privacy option changed!");
+                            System.out.println("Privacy option changed!");
+                        }
+                    }
+                    break;
+
+                    case 4:
+                        return;
+
+                    default: {
+                        System.out.println("Incorrect Choice. Try again");
+                        break;
                     }
                 }
-                break;
 
-                case 4:
-                    return;
+            } catch (InputMismatchException ex){
+                System.out.println("Invalid Input.");
+                input.nextLine();
             }
         }
     }
@@ -1198,23 +1334,29 @@ public class Main {
 
             List<Profile> pendingMembers = groupManager.getPendingMembersList(group);
 
-            for(Profile profile : pendingMembers){
-                System.out.printf("%s (%s)", profile.getEntity(), profile.getUsername());
+            try {
+                for (int i = 0 ; i < pendingMembers.size(); ++i) {
 
-                System.out.println("1: Accept 2:Delete 3:Nothing");
-                int ans = input.nextInt();
-                input.nextLine();
+                    Profile profile = pendingMembers.get(i);
+                    System.out.printf("%s (%s)\n", profile.getFullName(), profile.getUsername());
 
-                if(ans == 1){
-                    groupManager.joinGroup(group, profile);
-                    groupManager.removeFromPending(group,profile);
+                    System.out.println("1: Accept 2:Delete 3:Nothing");
+                    int ans = input.nextInt();
+                    input.nextLine();
 
-                    notificationManager.sendNotification(memberProfile.getProfileId(), profile.getProfileId(),
-                            EventType.ACCEPTED_REQUEST,
-                            "Your request has been approved by admins! You've joined "+ group.getGroupName());
+                    if (ans == 1) {
+                        groupManager.joinGroup(group, profile);
+                        groupManager.removeFromPending(group, profile);
+                        userManager.joinGroup(profile, group);
+
+                        notificationManager.sendNotification(memberProfile.getProfileId(), profile.getProfileId(),
+                                EventType.ACCEPTED_REQUEST,
+                                "Your request has been approved by admins! You've joined " + group.getGroupName());
+                    } else if (ans == 2) groupManager.removeFromPending(group, profile);
                 }
-
-                else if(ans == 2) groupManager.removeFromPending(group,profile);
+            } catch (InputMismatchException ex){
+                System.out.println("Invalid Input.");
+                input.nextLine();
             }
 
         }
@@ -1228,7 +1370,7 @@ public class Main {
         System.out.println("Enter the name of the group: ");
         String groupName = input.nextLine();
 
-        Map<String, Group> groups = groupManager.getGroupsMap();
+        Map<String, Group> groups = groupManager.getGroupsByName();
 
         for(Map.Entry<String,Group> entry : groups.entrySet()){
             if (entry.getKey().equalsIgnoreCase(groupName) || entry.getKey().contains(groupName)) {
@@ -1238,26 +1380,46 @@ public class Main {
 
         System.out.println("1.Open Group 2.Join Group 3.Return");
 
-        int choice = input.nextInt();
-        input.nextLine();
+        try {
+            int choice = input.nextInt();
+            input.nextLine();
 
-        if(choice == 3) return;
+            if (choice == 3) return;
 
-        else{
-            System.out.println("Enter the ID of the group: ");
-            String id = input.nextLine();
+            else {
+                System.out.println("Enter the ID of the group: ");
+                String id = input.nextLine();
 
-            Group group = groupManager.getGroupById(id);
+                Group group = groupManager.getGroupById(id);
 
-            if(choice == 1) viewGroup(group,memberProfile);
+                if (choice == 1) viewGroup(group, memberProfile);
 
-            else if (choice == 2){
-                if(group.getPrivacyOption() == PrivacyOption.PRIVATE) groupManager.joinPrivateGroup(group,memberProfile);
-                else groupManager.joinGroup(group,memberProfile);
+                else if (choice == 2) {
+                    if (group.getPrivacyOption() == PrivacyOption.PRIVATE) {
+                        groupManager.joinPrivateGroup(group, memberProfile);
+                        System.out.println("This group is private. Your request is sent to the admin.");
+
+                        notificationManager.sendNotification(memberProfile.getProfileId(), group.getGroupId(),
+                                EventType.JOIN_REQUEST, memberProfile.getFullName()+" has requested to join the group.");
+                    }
+                    else {
+                        groupManager.joinGroup(group, memberProfile);
+                        System.out.println("You've joined the group !");
+
+                        notificationManager.sendNotification(memberProfile.getProfileId(), group.getGroupId(),
+                                EventType.JOIN_REQUEST, memberProfile.getFullName()+" has joined the group!");
+                    }
+                }
+                else System.out.println("Incorrect Input. Try again.");
             }
-
-            else System.out.println("Incorrect Input. Try again.");
+        } catch (InputMismatchException ex){
+            System.out.println("Invalid Input.");
+            input.nextLine();
         }
-    } 
+
+        catch (NullPointerException ex){
+            System.out.println("There's no such a group.");
+        }
+    }
 
 }

@@ -8,14 +8,16 @@ public class GroupRepository {
     private final Map<Profile, List<Group>> groupsByProfile;
     private final Map<Group, List<Profile>> joinedMembersByGroup;
     private final Map<Group, List<Profile>> pendingMembersByGroup;
-    private final Map<String, Group> groupsMap; // id
+    private final Map<String, Group> groupsById;
+    private final Map<String, Group> groupsByName;
 
 
     public GroupRepository() {
         this.groupsByProfile = new HashMap<>();
         this.joinedMembersByGroup = new HashMap<>();
-        this.groupsMap = new HashMap<>();
+        this.groupsById = new HashMap<>();
         this.pendingMembersByGroup = new HashMap<>();
+        this.groupsByName = new HashMap<>();
     }
 
     public void addGroup(Profile admin, Group group){
@@ -23,7 +25,8 @@ public class GroupRepository {
         list.add(group);
         groupsByProfile.put(admin,list);
 
-        groupsMap.put(group.getGroupId(), group);
+        groupsById.put(group.getGroupId(), group);
+        groupsByName.put(group.getGroupName(), group);
 
         List<Profile> members = joinedMembersByGroup.getOrDefault(group,new ArrayList<>());
         members.add(admin);
@@ -31,7 +34,7 @@ public class GroupRepository {
     }
 
     public boolean findGroup(String groupId){
-        return groupsMap.containsKey(groupId.toLowerCase());
+        return groupsById.containsKey(groupId.toLowerCase());
     }
 
     public boolean findJoinedMember(Group group, Profile profile){
@@ -39,7 +42,7 @@ public class GroupRepository {
     }
 
     public Group getGroup(String groupId){
-        return groupsMap.get(groupId);
+        return groupsById.get(groupId);
     }
 
     public void joinPrivateGroup(Group group, Profile profile){
@@ -78,8 +81,12 @@ public class GroupRepository {
         return joinedMembersByGroup;
     }
 
-    public Map<String, Group> getGroupsMap() {
-        return groupsMap;
+    public Map<String, Group> getGroupsById() {
+        return groupsById;
+    }
+
+    public Map<String, Group> getGroupsByName() {
+        return groupsByName;
     }
 
     public Map<Group, List<Profile>> getPendingMembersByGroup() {
@@ -92,5 +99,9 @@ public class GroupRepository {
 
     public void exitGroup(Group group, Profile member){
         joinedMembersByGroup.get(group).remove(member);
+    }
+
+    public List<Group> getGroupsByProfile(Profile profile){
+        return groupsByProfile.get(profile);
     }
 }
