@@ -13,12 +13,6 @@ public class Main {
     public static PasswordHashingManager passwordManager = new PasswordHashingManager(database);
 
     public static void main(String[] args) {
-
-        Member member = new Member("shawerma","Shahd", "Mahmoud",
-                "shahd@gmail.com", "0123456789","123");
-        profileManager.createProfile(member);
-        userManager.addMember("shawerma",member);
-
         while(true) {
             startingMenu();
         }

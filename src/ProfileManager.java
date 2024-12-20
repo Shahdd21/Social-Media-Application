@@ -3,7 +3,7 @@ import java.util.Map;
 
 public class ProfileManager {
 
-    public ProfileRepository profileRepository;
+    private final ProfileRepository profileRepository;
 
     public ProfileManager(Database database){
         profileRepository = database.getProfileRepository();
