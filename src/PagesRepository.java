@@ -41,7 +41,4 @@ public class PagesRepository {
         return pagesByName;
     }
 
-    public Map<Profile, List<Page>> getPagesByProfile() {
-        return pagesByProfile;
-    }
 }
